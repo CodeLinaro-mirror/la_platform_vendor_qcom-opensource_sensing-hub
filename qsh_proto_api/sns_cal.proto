@@ -1,6 +1,6 @@
 // @file sns_cal.proto
 //
-// Defines standard message types pertaining to calibration
+// Defines standard message types for Calibration
 //
 // Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -8,109 +8,90 @@ syntax = "proto2";
 import "nanopb.proto";
 import "sns_std_sensor.proto";
 
-// For dynamic calibration supported by Calibration Sensors:
-// Client will use the standard on change config message id to enable 
-// Calibration Sensor. Calibration algorithms are inherently on change in
-// behavior.
-
-// For both dynamic calibration supported by Calibration Sensors &
-// factory calibration supported by Physical Sensors:
-// Client can send an empty request with the msg id for reset
-// to reset the calibration parameters.
+// Standard message IDs supported by Physical Sensors as well as Dynamic
+// Calibration Sensors such as "gyro_cal", "mag_cal".
 enum sns_cal_msgid
 {
   option (nanopb_enumopt).long_names = false;
+
+  // Request to reset calibration parameters for a Sensor.
+  // Message: None
   SNS_CAL_MSGID_SNS_CAL_RESET =  512;
+
+  // Calibration Event
+  // Physical Sensors generate sns_cal_event to convey the factory calibration
+  // being applied.
+  // Dynamic Calibration Sensors generate this event to convey runtime estimated
+  // calibration parameters.
+  // Message: sns_cal_event
   SNS_CAL_MSGID_SNS_CAL_EVENT = 1022;
 }
 
 // Calibration Event
-// Used as an output data event by Calibration Sensors to convey
-// dynamic calibration estimates and 
-// as a config event by Physical Sensors to convey factory calibration
-// being applied
+// A client receiving an sns_cal_event from a Dynamic Calibration Sensor can
+// use it to correct sensor data received from the corresponding Physical
+// Sensor. The correction can be applied as follows :
 //
-// A) The data field of the sns_cal_event message
-// 
-// 1) float bias[] (Nx1 vector)
-//      The zero bias (B) correction subtracted to get calibrated sample.(Nx1 vector)
+//  Convention :
+//  Sc = Calibrated sensor sample
+//  S = Sensor sample (Nx1 vector)
+//  SF = Scaling factor to be applied to S
+//  CM = compensation_matrix
+//  B = bias
+//  "*" represents matrix multiplication
+//  ".*" represents element-by-element multiplication
 //
-// 2) float scale_factor (Nx1 vector)
-//      The scaling (SF) to be done before doing any bias correction.
+//  if SF, B and CM are available,
 //
-// 3) float comp_matrix (NxN matrix)
-//      The compensation matrix (CM). The matrix elements are in row major order ie:
-//      CM =  CM0  CM1  CM2
-//            CM3  CM4  CM5
-//            CM6  CM7  CM8
+//      Sc = CM * ((S .* SF) - B)
 //
-//      The calibrated sample (Sc) is computed as following.
+//  if only B and CM are available,
 //
-//      if SF, B and CM are available,
+//      Sc = CM * (S - B)
 //
-//          Sc = CM * ((S .* SF) - B)
+//  if only SF and B are available,
 //
-//      if only B and CM are available,
+//      Sc = ((S .* SF) - B)
 //
-//          Sc = CM * (S - B)
+//  if only SF is available,
 //
-//      if only SF and B are available,
+//      Sc = S .* SF
 //
-//          Sc = ((S .* SF) - B)
+//  if only B is available,
 //
-//      if only SF is available,
+//      Sc = (S - B)
 //
-//          Sc = S .* SF
+//  if only CM is available
 //
-//      if only B is available,
+//      Sc = CM * S
 //
-//          Sc = (S - B)
-//
-//      if only CM is available
-//
-//          Sc = CM * S
-//
-//      where:
-//          Sc = Calibrated sensor sample
-//          S = Sensor sample (Nx1 vector)
-//          SF = Scaling factor to be applied to S
-//          CM = compensation_matrix
-//          B = bias
-//          "*" represents matrix multiplication
-//          ".*" represents element-by-element multiplication
-//
-//
-// B) The status field of the sns_std_sensor_event message contains
-//    the quality of calibration defined by sns_std_sensor_sample_status as
-//    SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE = 0; // Sample is unreliable.
-//    SNS_STD_SENSOR_SAMPLE_STATUS_ACCURACY_LOW = 1; // Sample is low accuracy.
-//    SNS_STD_SENSOR_SAMPLE_STATUS_ACCURACY_MEDIUM = 2;// Sample is medium accuracy.
-//    SNS_STD_SENSOR_SAMPLE_STATUS_ACCURACY_HIGH = 3; // Sample is high accuracy.
-
 message sns_cal_event
 {
-  //Optional bias value
-  //If no bias is being published this will be of size 0.  
-  //Generic for different axes biases.
-  //Size is defined by axes value inherently.
+  // Bias (B) in units of the Sensor.
+  // Nx1 zero bias vector where N is the number of axes of the Sensor.
+  // Bias is subtracted from the Sensor samples to get Calibrated samples.
   repeated float bias = 1;
-  
-  //Optional scaling factor
-  //If no scaling factor is published this will be of size 0.
-  //Size if published is has to be equal to the axes of the data
+
+  // Scaling Factor (SF)
+  // Nx1 scale factor vector where N is the number of axes of the Sensor.
+  // Scaling Factor is applied before subtracting bias to get Calibrated
+  // samples.
   repeated float scale_factor = 2;
- 
-  //If no CM is being published this will be of size 0.
-  //Optional CM values . 
-  //Size if published should be equal to matrix of size [axes*axes] 
+
+  // Compensation Matrix (CM)
+  // NxN compensation matrix, where N is the number of axes of the Sensor, and
+  // represented in row-major order.
+  //      CM =  CM0  CM1  CM2
+  //            CM3  CM4  CM5
+  //            CM6  CM7  CM8
   repeated float comp_matrix = 3;
-  
-  // Event sample status.
+
+  // Quality of the calibration.
   required sns_std_sensor_sample_status status = 4 [default = SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE];
 
-  // Calibration ID, a unique identifier for the calibration set being used
-  // As an example, could be set when there are distinct calibration sets for different
-  // device modes being maintained
+  // Calibration ID, a unique identifier for the calibration set being used.
+  // As an example, could be used when there are distinct calibration sets for
+  // a flip phone being open or closed.
   optional fixed32 cal_id = 5;
 }
 

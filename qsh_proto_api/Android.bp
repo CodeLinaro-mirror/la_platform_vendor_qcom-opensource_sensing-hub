@@ -24,6 +24,7 @@ cc_library_shared {
         "sns_humidity.proto",
         "sns_direct_channel.proto",
         "sns_physical_sensor_test.proto",
+        "sns_device_mode.proto",
     ],
     local_include_dirs: ["./"],
     cppflags: ["-DGOOGLE_PROTOBUF_NO_RTTI"],
