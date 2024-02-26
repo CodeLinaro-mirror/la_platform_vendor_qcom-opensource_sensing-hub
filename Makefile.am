@@ -1,7 +1,8 @@
 ACLOCAL_AMFLAGS = -I m4
 
 dirs = qsh_proto_api \
-       session/1.0
+       session/1.0  \
+       examples/SessionClient
 
 SUBDIRS = $(dirs)
 
