@@ -26,7 +26,21 @@ nodist_proto_SOURCES = nanopb.pb.cc                       \
                        sns_humidity.pb.cc                 \
                        sns_direct_channel.pb.cc           \
                        sns_physical_sensor_test.pb.cc     \
-                       sns_device_mode.pb.cc
+                       sns_device_mode.pb.cc              \
+                       sns_transport_ppe.pb.cc            \
+                       sns_tilt.pb.cc                     \
+                       sns_sig_motion.pb.cc               \
+                       sns_rotv.pb.cc                     \
+                       sns_persist_motion_detect.pb.cc    \
+                       sns_pedometer.pb.cc                \
+                       sns_mag_cal.pb.cc                  \
+                       sns_hinge_angle.pb.cc              \
+                       sns_gyro_cal.pb.cc                 \
+                       sns_gravity.pb.cc                  \
+                       sns_geomag_rv.pb.cc                \
+                       sns_game_rv.pb.cc                  \
+                       sns_device_orient.pb.cc            \
+                       sns_amd.pb.cc
 
 include_HEADERS = nanopb.pb.h                       \
                   sns_std_sensor.pb.h               \
@@ -49,7 +63,21 @@ include_HEADERS = nanopb.pb.h                       \
                   sns_humidity.pb.h                 \
                   sns_direct_channel.pb.h           \
                   sns_physical_sensor_test.pb.h     \
-                  sns_device_mode.pb.h
+                  sns_device_mode.pb.h              \
+                  sns_transport_ppe.pb.h            \
+                  sns_tilt.pb.h                     \
+                  sns_sig_motion.pb.h               \
+                  sns_rotv.pb.h                     \
+                  sns_persist_motion_detect.pb.h    \
+                  sns_pedometer.pb.h                \
+                  sns_mag_cal.pb.h                  \
+                  sns_hinge_angle.pb.h              \
+                  sns_gyro_cal.pb.h                 \
+                  sns_gravity.pb.h                  \
+                  sns_geomag_rv.pb.h                \
+                  sns_game_rv.pb.h                  \
+                  sns_device_orient.pb.h            \
+                  sns_amd.pb.h
 
 sources_libsensinghub = $(nodist_proto_SOURCES)
 
