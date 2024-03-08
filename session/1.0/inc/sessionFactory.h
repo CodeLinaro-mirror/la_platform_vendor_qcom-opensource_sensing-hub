@@ -14,7 +14,7 @@ namespace V1_0 {
 class sessionFactory {
 public:
   typedef ISession* (*getSession_t)();
-  sessionFactory();
+  sessionFactory(){};
   ~sessionFactory(){};
 
   /**
@@ -24,9 +24,8 @@ public:
   ISession* getSession();
 private:
   int loadSymbol();
-  void* mLibHandler;
-  bool mSymbolLoaded;
-  getSession_t getSessionSymbol;
+  static bool mSymbolLoaded;
+  static getSession_t mGetSessionSymbol;
 };
 
 }  // namespace V1_0
