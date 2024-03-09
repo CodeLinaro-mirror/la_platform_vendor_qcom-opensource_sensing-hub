@@ -28,7 +28,7 @@
 #include "sns_cal.pb.h"
 
 #include "ISession.h"
-#include "sessionFactory.h"
+#include "SessionFactory.h"
 
 using namespace std;
 using namespace ::com::quic::sensinghub::session::V1_0;

@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-dirs = qsh_proto_api \
+dirs = apis/proto \
        session/1.0  \
        examples/SessionClient
 

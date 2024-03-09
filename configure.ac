@@ -70,7 +70,7 @@ AM_CONDITIONAL([USE_SYSTEMD], [test "x${SYSTEMD}" != "xno"])
 
 AC_CONFIG_FILES([             \
         Makefile              \
-        qsh_proto_api/Makefile \
+        apis/proto/Makefile   \
         session/1.0/Makefile  \
         examples/SessionClient/Makefile \
         sensing-hub.pc
