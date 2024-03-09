@@ -83,12 +83,12 @@ sources_libsensinghub = $(nodist_proto_SOURCES)
 
 library_includedir = $(pkgincludedir)
 
-lib_LTLIBRARIES = libSensingHubAPI.la
+lib_LTLIBRARIES = libsensinghubapi.la
 
 requiredlibs_sensinghubapi = @PROTOBUF_LIBS@
 
-libSensingHubAPI_la_CC = @CC@
-libSensingHubAPI_la_SOURCES = $(sources_libsensinghub)
-libSensingHubAPI_la_CFLAGS = $(AM_CFLAGS) @PROTOBUF_CFLAGS@
-libSensingHubAPI_la_LDFLAGS = -shared -version-info 1:0:0 @LDFLAGS@
-libSensingHubAPI_la_LIBADD = $(requiredlibs_sensinghubapi)
+libsensinghubapi_la_CC = @CC@
+libsensinghubapi_la_SOURCES = $(sources_libsensinghub)
+libsensinghubapi_la_CFLAGS = $(AM_CFLAGS) @PROTOBUF_CFLAGS@
+libsensinghubapi_la_LDFLAGS = -shared -version-info 1:0:0 @LDFLAGS@
+libsensinghubapi_la_LIBADD = $(requiredlibs_sensinghubapi)

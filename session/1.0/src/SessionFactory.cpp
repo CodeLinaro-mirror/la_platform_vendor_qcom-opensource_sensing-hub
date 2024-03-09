@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 
-#include "sessionFactory.h"
+#include "SessionFactory.h"
 #include <dlfcn.h>
 
 using namespace com::quic::sensinghub::session::V1_0 ;
