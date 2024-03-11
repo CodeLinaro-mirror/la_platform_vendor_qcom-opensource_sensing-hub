@@ -57,8 +57,8 @@ vector<suid> suidList;
   This function retrieves the list of all suids for the required sensorType.
 */
 bool getSuid() {
-  condition_variable respCV, eventCV;
-  mutex respMutex, eventMutex;
+  condition_variable eventCV;
+  mutex eventMutex;
 
   /*  -----------------------------------------------------------------------------------
                define event callback, response callback, error callback pointers
@@ -76,7 +76,7 @@ bool getSuid() {
         sns_suid_event pb_suid_event;
         pb_suid_event.ParseFromString(pb_event.payload());
         const string& datatype = pb_suid_event.data_type();
-        printf("Received SUIDs for %s, number of suids received = %d\n", datatype.c_str(), pb_suid_event.suid_size());
+        printf("\nReceived SUIDs for %s, number of suids received = %d\n", datatype.c_str(), pb_suid_event.suid_size());
 
         /* create a list of all suids found for this sensorType */
         suidList.clear();
@@ -85,12 +85,10 @@ bool getSuid() {
           printf("\nSUID received - suid_low=%" PRIu64 " suid_high=%" PRIu64 , pb_suid_event.suid(j).suid_low(), pb_suid_event.suid(j).suid_high());
           suidList[j] = suid(pb_suid_event.suid(j).suid_low(), pb_suid_event.suid(j).suid_high());
         }
-        cout<<"out of inner for loop\n";
       }
       else
         printf("\ninvalid event msg_id = %d", pb_event.msg_id());
     }
-    cout<<"out of outer for loop\n";
 
    /* notify the waiting thread when all events are parsed */
     unique_lock<mutex> lock(eventMutex);
@@ -98,9 +96,8 @@ bool getSuid() {
   };
 
 
-  ISession::respCallBack suidResp = [&](uint32_t resp_value, uint64_t client_connect_id){
-               unique_lock<mutex> respLock(respMutex);
-               respCV.notify_one();
+  ISession::respCallBack suidResp = [](uint32_t resp_value, uint64_t client_connect_id){
+            cout<<"\nSUID discovery response received.";
   };
 
   ISession::errorCallBack suidError = [](ISession::error errorValue){
@@ -166,16 +163,11 @@ bool getSuid() {
   pb_req_msg.SerializeToString(&pb_req_msg_encoded);
 
   /* send proto encoded message to sensing-hub using the suidSession */
-  unique_lock<mutex> respLock(respMutex);
   ret = suidSession->sendRequest(uid, pb_req_msg_encoded);
   if(0 != ret){
     printf("Error in sending suid discovery request");
     return false;
   }
-
-  /* wait for the response */
-  respCV.wait(respLock);
-  respLock.unlock();
 
   /* wait until all suids are received */
   unique_lock<mutex> eventLock(eventMutex);
@@ -196,8 +188,8 @@ bool getSuid() {
   This function fetches the attributes of all suids for required sensorType.
 */
 bool getAttributes(){
-  condition_variable respCV, eventCV;
-  mutex respMutex, eventMutex;
+  condition_variable eventCV;
+  mutex eventMutex;
 
   /*  -----------------------------------------------------------------------------------
                define event callback, response callback, error callback pointers
@@ -248,9 +240,8 @@ bool getAttributes(){
   };
 
 
-  ISession::respCallBack attributeResp = [&](uint32_t resp_value, uint64_t client_connect_id){
-               unique_lock<mutex> respLock(respMutex);
-               respCV.notify_one();
+  ISession::respCallBack attributeResp = [](uint32_t resp_value, uint64_t client_connect_id){
+          cout<<"\nAttribute query response received.";
   };
 
   ISession::errorCallBack attributeError = [](ISession::error errorValue){
@@ -309,16 +300,11 @@ bool getAttributes(){
     pb_req_msg.SerializeToString(&pb_req_msg_encoded);
 
     /* send proto encoded message to sensing-hub using the attributeSession */
-    unique_lock<mutex> respLock(respMutex);
     ret = attributeSession->sendRequest(uid, pb_req_msg_encoded);
     if(0 != ret){
         printf("Error in sending attribute query request");
         return false;
     }
-
-    /* waiting for the response */
-    respCV.wait(respLock);
-    respLock.unlock();
   }
 
   /* wait until all requested attributes are received */
@@ -342,8 +328,6 @@ bool getAttributes(){
   @param[in]   streamingSession       pointer to session dedicated for streaming activity
 */
 bool startStreaming(ISession* streamingSession){
-  condition_variable respCV, eventCV;
-  mutex respMutex, eventMutex;
 
 /*  -----------------------------------------------------------------------------------
              define event callback, response callback, error callback pointers
@@ -381,15 +365,10 @@ bool startStreaming(ISession* streamingSession){
       else
         printf("\ninvalid event msg_id = %d", pb_event.msg_id());
     }
-
-    /* notify the waiting thread when all events are parsed */
-    unique_lock<mutex> lock(eventMutex);
-    eventCV.notify_one();
   };
 
-  ISession::respCallBack dataResp = [&](uint32_t resp_value, uint64_t client_connect_id){
-    unique_lock<mutex> respLock(respMutex);
-    respCV.notify_one();
+  ISession::respCallBack dataResp = [](uint32_t resp_value, uint64_t client_connect_id){
+          cout<<"\nData request response received.";
   };
 
   ISession::errorCallBack dataError = [](ISession::error errorValue){
@@ -440,16 +419,11 @@ bool startStreaming(ISession* streamingSession){
     pb_req_msg.SerializeToString(&pb_req_msg_encoded);
 
     /* send proto encoded message to sensing-hub using the streamingSession */
-    unique_lock<mutex> respLock(respMutex);
     ret = streamingSession->sendRequest(uid, pb_req_msg_encoded);
     if(0 != ret){
         printf("Error in sending streaming request");
         return false;
     }
-
-    /* waiting for the response */
-    respCV.wait(respLock);
-    respLock.unlock();
   }
 
   return true;
