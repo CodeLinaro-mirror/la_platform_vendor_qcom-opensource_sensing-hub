@@ -1,34 +1,41 @@
 // @file sns_cal.proto
 //
-// Defines standard message types for Calibration
+// @brief Defines standard message types for Calibration
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @details This file defined Standard message IDs supported by Physical
+// Sensors as well as Dynamic Calibration Sensors such as "gyro_cal", "mag_cal".
+
 syntax = "proto2";
 import "nanopb.proto";
 import "sns_std_sensor.proto";
 
-// Standard message IDs supported by Physical Sensors as well as Dynamic
-// Calibration Sensors such as "gyro_cal", "mag_cal".
+
+// @brief Calibration Message IDs.
 enum sns_cal_msgid
 {
   option (nanopb_enumopt).long_names = false;
 
-  // Request to reset calibration parameters for a Sensor.
+  // @brief Request to reset calibration parameters for a Sensor.
   // Message: None
   SNS_CAL_MSGID_SNS_CAL_RESET =  512;
 
-  // Calibration Event
-  // Physical Sensors generate sns_cal_event to convey the factory calibration
-  // being applied.
+  // @brief Calibration Event
+  //
+  // @details Physical Sensors generate sns_cal_event to convey the factory calibration
+  // being applied. 
   // Dynamic Calibration Sensors generate this event to convey runtime estimated
-  // calibration parameters.
+  // calibration parameters. 
   // Message: sns_cal_event
   SNS_CAL_MSGID_SNS_CAL_EVENT = 1022;
 }
 
-// Calibration Event
-// A client receiving an sns_cal_event from a Dynamic Calibration Sensor can
+// @brief Calibration Event
+//
+// @details A client receiving an sns_cal_event from a Dynamic Calibration Sensor can 
 // use it to correct sensor data received from the corresponding Physical
 // Sensor. The correction can be applied as follows :
 //
@@ -67,32 +74,34 @@ enum sns_cal_msgid
 //
 message sns_cal_event
 {
-  // Bias (B) in units of the Sensor.
-  // Nx1 zero bias vector where N is the number of axes of the Sensor.
+  // @brief Bias (B) in units of the Sensor. 
+  //
+  // @details Nx1 zero bias vector where N is the number of axes of the Sensor.
   // Bias is subtracted from the Sensor samples to get Calibrated samples.
   repeated float bias = 1;
-
-  // Scaling Factor (SF)
-  // Nx1 scale factor vector where N is the number of axes of the Sensor.
+  
+  // @brief Scaling Factor (SF) 
+  //
+  // @details Nx1 scale factor vector where N is the number of axes of the Sensor. 
   // Scaling Factor is applied before subtracting bias to get Calibrated
-  // samples.
+  // samples. 
   repeated float scale_factor = 2;
-
-  // Compensation Matrix (CM)
-  // NxN compensation matrix, where N is the number of axes of the Sensor, and
+ 
+  // @brief Compensation Matrix (CM) 
+  //
+  // @details NxN compensation matrix, where N is the number of axes of the Sensor, and
   // represented in row-major order.
   //      CM =  CM0  CM1  CM2
   //            CM3  CM4  CM5
   //            CM6  CM7  CM8
   repeated float comp_matrix = 3;
-
-  // Quality of the calibration.
+  
+  // @brief Quality of the calibration.
   required sns_std_sensor_sample_status status = 4 [default = SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE];
 
-  // Calibration ID, a unique identifier for the calibration set being used.
-  // As an example, could be used when there are distinct calibration sets for
-  // a flip phone being open or closed.
+  // @brief Calibration ID, a unique identifier for the calibration set being used.
+  //
+  // @details As an example, could be used when there are distinct calibration sets for
+  // a flip phone being open or closed. 
   optional fixed32 cal_id = 5;
 }
-
-

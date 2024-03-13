@@ -1,27 +1,27 @@
 // @file sns_geomag_rv.proto
 //
-// Defines the API for Geomagnetic Rotation Vector sensors.
-// This Sensor is similar to Rotation Vector, but uses a magnetometer instead
-// of a gyroscope.
+// @brief Defines the API for Geomagnetic Rotation Vector Sensors.
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause-Clear
-
-syntax = "proto2";
-import "sns_std_sensor.proto";
-
-// A GeoMagRV sensor reports the orientation of the device relative to the
-// East-North-Up coordinates frame. It is obtained by integration of
-// accelerometer and magnetometer readings.
 //
-// ## GeoMagRV sensor attributes:
-// SNS_STD_SENSOR_ATTRID_TYPE is "geomag_rv"
+// @details This Sensor is similar to Rotation Vector, but uses a magnetometer
+// instead of a gyroscope. The GeoMagRV sensor reports the orientation of the
+// device relative to the East-North-Up coordinates frame.
+// It is obtained by integration of accelerometer and magnetometer readings.
 //
-// ## Request Message: sns_std_sensor_config
+// ## Attribute Requirements:
+// 1. SNS_STD_SENSOR_ATTRID_TYPE is "geomag_rv"
+// 2. SNS_STD_SENSOR_ATTRID_RIGID_BODY: sns_std_sensor_rigid_body_type
+// 3. SNS_STD_SENSOR_ATTRID_STREAM_TYPE as SNS_STD_SENSOR_STREAM_TYPE_STREAMING.
+// 4. SNS_STD_SENSOR_ATTRID_API attribute contains "sns_geomag_rv.proto"
+//
+// ## Processing Stream Requests: sns_std_sensor_config
 // sns_std_sensor_config::sample_rate is used to specify the sampling rate (Hz)
 // of the GeoMagRV sensor. Sensor will generate data events at this rate.
 //
-// ## Event Message: sns_std_sensor_event
+// ## Publishing Stream Events: sns_std_sensor_event
 // Output of the GeoMagRV sensor will be populated in sns_std_sensor_event
 //
 // The East-North-Up coordinate system is defined as a direct orthonormal
@@ -47,3 +47,8 @@ import "sns_std_sensor.proto";
 // sns_std_sensor_event::status specifies the reliability of the sample value
 // value is of type sns_std_sensor_sample_status. see sns_std_sensor.proto for
 // details.
+
+syntax = "proto2";
+import "nanopb.proto";
+import "sns_std_sensor.proto";
+
