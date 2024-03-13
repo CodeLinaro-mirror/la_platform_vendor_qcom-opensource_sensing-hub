@@ -1,26 +1,27 @@
 // @file sns_std_type.proto
 //
-// This defines standard data types used across multiple Sensor API definitions
+// @brief This defines standard data types used across multiple Sensor API definitions
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
 // SPDX-License-Identifier: BSD-3-Clause-Clear
+
 syntax = "proto2";
 import "nanopb.proto";
 
-option java_package = "com.qualcomm.qti.sensors";
 
-// The Sensors Unique ID (SUID) represents a unique sensor implementation
+// @brief The Sensors Unique ID (SUID) represents a
+// unique sensor implementation
 message sns_std_suid {
   required fixed64 suid_low = 1;
   required fixed64 suid_high = 2;
 }
 
-// Represents an attribute value
-// Attribute values may be a single value, array of simple values, or
-// an array of complex tuples.
-// Types for standard attributes are defined in sns_std_sensor.proto
+// @brief Represents an attribute value, which may be a single value, array of
+// simple values, or an array of complex tuples. Types for standard attributes
+// are defined in sns_std_sensor.proto.
 message sns_std_attr_value {
-  // "data" submessage required to support recursion
+  // @brief "data" submessage required to support recursion
   message data {
     option (nanopb_msgopt).no_unions = true;
     oneof value {
@@ -34,121 +35,117 @@ message sns_std_attr_value {
   repeated data values = 1;
 }
 
-// An individual attribute from a Sensor
+// @brief  An individual attribute from a Sensor
 message sns_std_attr {
-  // Attribute ID.
-  // Attribute IDs for standard attributes are defined in
-  // sns_std_sensor.proto
+  // @brief Attribute ID (IDs for standard attributes are
+  // defined in sns_std_sensor.proto).
   required int32 attr_id = 1;
-  // Attribute value
+  // @brief Attribute value
   required sns_std_attr_value value = 2;
 }
 
-// Standard error codes
+// @brief Standard error codes
 enum sns_std_error {
   option (nanopb_enumopt).long_names = false;
 
-  /* No error occurred; success. */
+  // @brief No error occurred; success.
   SNS_STD_ERROR_NO_ERROR = 0;
 
-  /* Unrecoverable or internal error occurred. */
+  // @brief Unrecoverable or internal error occurred.
   SNS_STD_ERROR_FAILED = 1;
 
-  /* This API is not supported or is not implemented. */
+  // @brief This API is not supported or is not implemented.
   SNS_STD_ERROR_NOT_SUPPORTED = 2;
 
-  /* Message contains invalid data type,
-   * e.g., unknown message ID, unknown registry group, or unexpected
-   * Sensor UID, etc */
+  // @brief Message contains invalid data type, e.g., unknown message ID,
+  // unknown registry group, or unexpected Sensor UID, etc
   SNS_STD_ERROR_INVALID_TYPE = 3;
 
-  /* Catastrophic error; expect no further data */
+  // @brief Catastrophic error; expect no further data
   SNS_STD_ERROR_INVALID_STATE = 4;
 
-  /* One or more argument values were outside of the valid range */
+  // @brief One or more argument values were outside of the valid range
   SNS_STD_ERROR_INVALID_VALUE = 5;
 
-  /* This operation is not available at this time */
+  // @brief This operation is not available at this time
   SNS_STD_ERROR_NOT_AVAILABLE = 6;
 
-  /* This action was rejected due to the current policy settings */
+  // @brief This action was rejected due to the current policy settings
   SNS_STD_ERROR_POLICY = 7;
 }
 
-// An ID for the client processor
+// @brief An ID for the client processor
 enum sns_std_client_processor {
   option (nanopb_enumopt).long_names = false;
 
-  // Sensors subsystem:
+  // @brief Sensors subsystem:
   SNS_STD_CLIENT_PROCESSOR_SSC = 0;
 
-  // Application processor:
+  // @brief Application processor:
   SNS_STD_CLIENT_PROCESSOR_APSS = 1;
 
-  // Audio DSP:
+  // @brief Audio DSP:
   SNS_STD_CLIENT_PROCESSOR_ADSP = 2;
 
-  // Modem DSP:
+  // @brief Modem DSP:
   SNS_STD_CLIENT_PROCESSOR_MDSP = 3;
 
-  // Compute DSP:
+  // @brief Compute DSP:
   SNS_STD_CLIENT_PROCESSOR_CDSP = 4;
 }
 
 
-// When requesting resampled data, this selects the type
-// of resampling to be performed.
+// @brief When requesting resampled data, this selects the type of
+// resampling to be performed.
 enum sns_resampler_rate
 {
   option (nanopb_enumopt).long_names = false;
 
-  // Requested resampled rate is fixed. This will result in an
+  // @brief Requested resampled rate is fixed. This will result in an
   // output rate close to the requested rate.
   SNS_RESAMPLER_RATE_FIXED = 0;
 
-  // Requested resampled rate is the minimum required. This will
-  // result in an output rate between the requested rate and
-  // double the requested rate.
+  // @brief Requested resampled rate is the minimum required. This will result
+  // in output rate between the requested rate and double the requested rate.
   SNS_RESAMPLER_RATE_MINIMUM = 1;
 }
 
-// When thresholded data is requested, this selects the types of
-// thresholding which will be performed.
-// Samples will be sent when the threshold is exceeded.
+// @brief When thresholded data is requested, this selects the types of
+// thresholding which will be performed. Samples will be sent when
+// the threshold is exceeded.
 enum sns_threshold_type
 {
   option (nanopb_enumopt).long_names = false;
 
-  // Provide thresholding as a delta between current value
-  // and last reported value.
+  // @brief Provide thresholding as a delta between current value and last reported value.
   SNS_THRESHOLD_TYPE_RELATIVE_VALUE = 0;
-
-  // Provide thresholding as a delta between current value
-  // and last reported value, compared as a percentage of the last reported value
+  
+  // @brief Provide thresholding as a delta between current value and last reported value,
+  // compared as a percentage of the last reported value
   SNS_THRESHOLD_TYPE_RELATIVE_PERCENT = 1;
-
-  // Provides thresholding of the current value against a fixed configured
-  // threshold value.
+  
+  // @brief Provides thresholding of the current value against a fixed
+  // configured threshold value.
   SNS_THRESHOLD_TYPE_ABSOLUTE = 2;
 
-  // Provides thresholding of angle between current and last reported quaternion
+  // @brief Provides thresholding of angle between current and last reported quaternion 
   // for quaternion sensors, in radians
   SNS_THRESHOLD_TYPE_ANGLE = 3;
 }
 
-// Standard technologies
+// @brief Standard technologies 
 enum sns_tech
 {
   option (nanopb_enumopt).long_names = false;
-
+  
   SNS_TECH_UNINITIALIZED = 0;
-
-  // Sensor Technology
+  
+  // @brief Sensor Technology
   SNS_TECH_SENSORS = 1;
-
-  // Audio Technology
+  
+  // @brief Audio Technology
   SNS_TECH_AUDIO = 2;
-
-  // Camera Technology
+  
+  // @brief Camera Technology
   SNS_TECH_CAMERA = 3;
 }

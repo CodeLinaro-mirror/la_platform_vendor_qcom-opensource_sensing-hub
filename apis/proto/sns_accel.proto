@@ -1,21 +1,16 @@
 // @file sns_accel.proto
 //
-// Defines the API for Accelerometer Sensors.
-// All Accelerometer Sensor drivers are required to comply with this API.
+// @brief Defines the API for Accelerometer Sensors.
+//
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @details All Accelerometer Sensor drivers are required to comply with this API.
 // Any additional functionality for Accelerometer Sensor may be defined in a
 // device specific API file.
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
-// SPDX-License-Identifier: BSD-3-Clause-Clear
-
-syntax = "proto2";
-import "nanopb.proto";
-import "sns_std_sensor.proto";
-import "sns_physical_sensor_test.proto";
-import "sns_std_event_gated_sensor.proto";
-import "sns_cal.proto";
-
-// Attribute requirements:
+// ## Attribute Requirements:
 // The Accelerometer Sensor publishes:
 // 1. SNS_STD_SENSOR_ATTRID_TYPE attribute value as "accel".
 // 2. SNS_STD_SENSOR_ATTRID_API attribute contains "sns_accel.proto".
@@ -23,8 +18,8 @@ import "sns_cal.proto";
 // 4. SNS_STD_SENSOR_ATTRID_RANGES attribute values in +/- m/s^2 unit.
 // 5. SNS_STD_SENSOR_ATTRID_STREAM_TYPE as SNS_STD_SENSOR_STREAM_TYPE_STREAMING.
 // 6. See sns_std_sensor.proto for other attributes.
-
-// Processing stream requests:
+//
+// ## Processing Stream Requests:
 // 1. The Accelerometer Sensor handles the sns_std_sensor_config
 //    message request with msgid SNS_STD_SENSOR_MSGID_SNS_STD_SENSOR_CONFIG
 //    for all non-gated stream enable/update requests.
@@ -39,8 +34,8 @@ import "sns_cal.proto";
 // 3. The Accelerometer Sensor uses batching_period item in
 //    sns_std_request as the requested batching rate to determine
 //    hardware FIFO and DAE (if supported) watermarks.
-
-// Publishing stream events:
+//
+// ## Publishing Stream Events:
 // 1. The Accelerometer Sensor publishes acceleration data stream events
 //    using the sns_std_sensor_event message.
 // 2. Each stream event contains three output data fields where data is
@@ -86,19 +81,27 @@ import "sns_cal.proto";
 // 9. If all outstanding requests to the Sensor are gated requests but the
 //    "motion_detect" Sensor is not enabled then the Sensor continues to generate
 //    output events.
-
-// Processing self-test requests:
+//
+// ## Processing Self-Test Requests:
 // 1. The Accelerometer Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_COM test
 //    type using the physical sensor test API.
 // 2. The Accelerometer Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_FACTORY test
 //    type to determine factory calibration parameters using the physical
 //    sensor test API.
 // 3. The Accelerometer Sensor may implement other test types.
-
-// Publishing self-test events:
+//
+// ## Publishing Self-Test Events:
 // 1. The Accelerometer Sensor uses sns_physical_sensor_test_event message to publish
 //    a test completion event.
 // 2. The test_passed field in sns_physical_sensor_test_event is used to output the
 //    pass/fail result of self-test execution.
 // 3. The test_data field in sns_physical_sensor_test_event may be used to output any
 //    driver-specific error data.
+
+syntax = "proto2";
+import "nanopb.proto";
+import "sns_cal.proto";
+import "sns_physical_sensor_test.proto";
+import "sns_std_event_gated_sensor.proto";
+import "sns_std_sensor.proto";
+

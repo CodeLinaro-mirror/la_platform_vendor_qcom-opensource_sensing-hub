@@ -1,20 +1,16 @@
 // @file sns_std_event_gated_sensor.proto
 //
-// Defines standard message types for Sensors with output streams that may be
+// @brief Defines standard message types for Sensors with output streams that may be
 // gated on an event from another Sensor.
-// Example: "accel" Sensor may be gated by motion status as published by
+//
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @details Example: "accel" Sensor may be gated by motion status as published by
 //          the "motion_detect" Sensor.
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
-// SPDX-License-Identifier: BSD-3-Clause-Clear
-
-syntax = "proto2";
-import "nanopb.proto";
-import "sns_std_sensor.proto";
-
-option java_package = "com.qualcomm.qti.sensors";
-
-// Request and Event messages:
+// ## Request and Event messages:
 // 1. An enable request to an event gated Sensor uses message
 //    sns_std_sensor_config with message ID
 //    SNS_STD_EVENT_GATED_SENSOR_MSGID_SNS_STD_SENSOR_CONFIG.
@@ -26,21 +22,26 @@ option java_package = "com.qualcomm.qti.sensors";
 //    sns_std_sensor_event message, or a Sensor may define their own event(s).
 //    See sns_std_sensor.proto and Sensor-specific proto file for details.
 
+syntax = "proto2";
+import "nanopb.proto";
+import "sns_std_sensor.proto";
+
+
+// @brief Message ID to send a gated request to a Sensor.
 enum sns_std_event_gated_sensor_msgid
 {
   option (nanopb_enumopt).long_names = false;
 
-  // Message ID to send a gated request to a Sensor.
-  // Gated requests may be paused when event gating is enabled
+  // @brief Gated requests may be paused when event gating is enabled
   // and all active clients are using this gated request.
-  //
   // Message: sns_std_sensor_config
   SNS_STD_EVENT_GATED_SENSOR_MSGID_SNS_STD_SENSOR_CONFIG = 518;
 
-  // An event gated Sensor uses this event message ID to indicate to its
+  // @brief An event gated Sensor uses this event message ID to indicate to its
   // clients that the gated stream request is converted to a non-gated
   // stream request.
-  // This typically happens when the gating event occurs.
+  //
+  // @details This typically happens when the gating event occurs.
   // Example: The accel Sensor is gated on motion_detect, and the
   //          motion detect interrupt fires. The accel Sensor publishes
   //          this event to its clients before the accel data stream starts.

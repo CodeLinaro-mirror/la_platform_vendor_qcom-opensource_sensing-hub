@@ -35,6 +35,7 @@ cc_library_shared {
         "sns_mag_cal.proto",
         "sns_pedometer.proto",
         "sns_persist_motion_detect.proto",
+        "sns_persist_stationary_detect.proto",
         "sns_rotv.proto",
         "sns_sig_motion.proto",
         "sns_tilt.proto",
