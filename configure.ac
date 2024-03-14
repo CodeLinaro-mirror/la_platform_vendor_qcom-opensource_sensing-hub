@@ -72,6 +72,7 @@ AC_CONFIG_FILES([             \
         Makefile              \
         qsh_proto_api/Makefile \
         session/1.0/Makefile  \
+        examples/SessionClient/Makefile \
         sensing-hub.pc
                ])
 AC_OUTPUT
