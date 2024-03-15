@@ -9,32 +9,30 @@
 using namespace com::quic::sensinghub::session::V1_0 ;
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so"
 
-sessionFactory::sessionFactory():
-    mLibHandler(nullptr),
-    mSymbolLoaded(false),
-    getSessionSymbol(nullptr)
-{
-}
+bool sessionFactory::mSymbolLoaded = false;
+sessionFactory::getSession_t sessionFactory::mGetSessionSymbol = nullptr;
 
 ISession* sessionFactory::getSession() {
   if(false == mSymbolLoaded) {
     mSymbolLoaded = (0==loadSymbol())?true:false;
   }
-  if(true == mSymbolLoaded) {
-    return getSessionSymbol();
+  if(true == mSymbolLoaded &&
+     nullptr != mGetSessionSymbol) {
+    return mGetSessionSymbol();
   } else {
     return nullptr;
   }
 }
 
 int sessionFactory::loadSymbol() {
-  mLibHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
-  if(nullptr == mLibHandler){
+  void* libHandler = nullptr;
+  libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
+  if(nullptr == libHandler){
     printf("error in loading the lib \n");
     return -1;
   }
-  getSessionSymbol = (getSession_t)dlsym(mLibHandler, "getSession");
-  if(nullptr == getSessionSymbol) {
+  mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
+  if(nullptr == mGetSessionSymbol) {
     printf("error in loading the lib \n");
     return -1;
   }
