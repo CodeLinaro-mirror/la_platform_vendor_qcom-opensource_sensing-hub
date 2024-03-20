@@ -1,20 +1,16 @@
 // @file sns_ambient_light.proto
 //
-// Defines the API for Ambient Light Sensors.
-// All Ambient Light Sensor drivers are required to comply with this API.
+// @brief Defines the API for Ambient Light Sensors.
+//
+// @copyright
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @details All Ambient Light Sensor drivers are required to comply with this API.
 // Any additional functionality for Ambient Light Sensor may be defined in a
 // device specific API file.
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
-// SPDX-License-Identifier: BSD-3-Clause-Clear
-
-syntax = "proto2";
-import "nanopb.proto";
-import "sns_std_sensor.proto";
-import "sns_physical_sensor_test.proto";
-import "sns_cal.proto";
-
-// Attribute requirements:
+// ## Attribute Requirements:
 // The Ambient Light Sensor publishes:
 // 1. SNS_STD_SENSOR_ATTRID_TYPE attribute value as "ambient_light".
 // 2. SNS_STD_SENSOR_ATTRID_API attribute contains "sns_ambient_light.proto"
@@ -23,8 +19,8 @@ import "sns_cal.proto";
 // 5. SNS_STD_SENSOR_ATTRID_STREAM_TYPE as SNS_STD_SENSOR_STREAM_TYPE_STREAMING
 //    or SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE
 // 6. See sns_std_sensor.proto for other attributes.
-
-// Processing stream requests:
+//
+// ## Processing Stream Requests:
 // 1. An Ambient Light Sensor may support either streaming or on-change
 //    modes. The operating mode is configured in the sensors Registry.
 //  a. If a driver supports both modes, it must publish two sensors. One
@@ -39,8 +35,8 @@ import "sns_cal.proto";
 // 4. In on-change mode the Sensor uses interrupt operation and reports
 //    samples for only significant change in ambient light.
 //    Example: +/- 10% change.
-
-// Publishing stream events:
+//
+// ## Publishing Stream Events:
 // 1. The Ambient Light Sensor publishes current illumination
 //    events using the sns_std_sensor_event message.
 // 2. Each stream event contains two output data fields where data is
@@ -59,8 +55,8 @@ import "sns_cal.proto";
 //    sns_cal_event message.
 //    It publishes this event each time there is change in its factory calibration
 //    data or when a client sends a new request.
-
-// Processing self-test requests:
+//
+// ## Processing Self-Test Requests:
 // 1. The Ambient Light Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_COM test
 //    type using the physical sensor test API.
 // 2. The Ambient Light Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_FACTORY test
@@ -69,11 +65,18 @@ import "sns_cal.proto";
 //    the sensor such that its output Lux value is comparable to a standard
 //    Luxmeter output in any lighting condition.
 // 3. The Ambient Light Sensor may implement other test types.
-
-// Publishing self-test events:
+//
+// ## Publishing Self-Test Events:
 // 1. The Ambient Light Sensor uses sns_physical_sensor_test_event message to publish
 //    a test completion event.
 // 2. The test_passed field in sns_physical_sensor_test_event is used to output the
 //    pass/fail result of self-test execution.
 // 3. The test_data field in sns_physical_sensor_test_event may be used to output any
 //    driver-specific error data.
+
+syntax = "proto2";
+import "nanopb.proto";
+import "sns_cal.proto";
+import "sns_physical_sensor_test.proto";
+import "sns_std_sensor.proto";
+

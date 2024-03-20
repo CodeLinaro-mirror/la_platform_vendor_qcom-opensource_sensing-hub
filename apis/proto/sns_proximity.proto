@@ -1,20 +1,16 @@
 // @file sns_proximity.proto
 //
-// Defines the API for Proximity Sensors.
-// All Proximity Sensor drivers are required to comply with this API.
+// @brief Defines the API for Proximity Sensors.
+//
+// @copyright 
+// Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+// SPDX-License-Identifier: BSD-3-Clause-Clear
+//
+// @details All Proximity Sensor drivers are required to comply with this API.
 // Any additional functionality for Proximity Sensor may be defined in a
 // device specific API file.
 //
-// Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
-// SPDX-License-Identifier: BSD-3-Clause-Clear
-
-syntax = "proto2";
-import "nanopb.proto";
-import "sns_std_sensor.proto";
-import "sns_physical_sensor_test.proto";
-import "sns_cal.proto";
-
-// Attribute requirements:
+// ## Attribute Requirements:
 // The Proximity Sensor publishes:
 // 1. SNS_STD_SENSOR_ATTRID_TYPE attribute value as "proximity".
 // 2. SNS_STD_SENSOR_ATTRID_API attribute contains "sns_proximity.proto"
@@ -22,8 +18,8 @@ import "sns_cal.proto";
 // 4. SNS_STD_SENSOR_ATTRID_STREAM_TYPE as SNS_STD_SENSOR_STREAM_TYPE_STREAMING
 //    or SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE
 // 5. See sns_std_sensor.proto for other attributes.
-
-// Procesing stream requests:
+//
+// ## Procesing Stream Requests:
 // 1. A Proximity Sensor may support either streaming or on-change
 //    mode. The operating mode is configured in the Registry.
 //  a. If a driver supports both modes, it must publish two sensors. One
@@ -34,8 +30,8 @@ import "sns_cal.proto";
 // 3. An on-change Proximity Sensor handles the
 //    SNS_STD_SENSOR_MSGID_SNS_STD_ON_CHANGE_CONFIG request for
 //    all on-change enable/update requests.
-
-// Publishing stream events:
+//
+// ## Publishing Stream Events:
 // 1. A Proximity Sensor with STREAM_TYPE_STREAMING shall publish data events
 //    using the SNS_PROXIMITY_MSGID_SNS_PROXIMITY_EVENT_RECURRENT message ID.
 // 2. A Proximity Sensor with STREAM_TYPE_ON_CHANGE shall publish data events
@@ -50,8 +46,8 @@ import "sns_cal.proto";
 //    sns_std_sensor_physical_config_event message.
 //    It publishes this event each time there is a change in hardware config
 //    or when a client sends a new request.
-
-// Processing self-test requests:
+//
+// ## Processing Self-Test Requests:
 // 1. The Proximity Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_COM test
 //    type using the physical sensor test API.
 // 2. The Proximity Sensor implements SNS_PHYSICAL_SENSOR_TEST_TYPE_FACTORY test
@@ -60,8 +56,8 @@ import "sns_cal.proto";
 //    the sensor to detect an object (including light and dark colored)
 //    at 5 cm distance from the physical sensor.
 // 3. The Proximity Sensor may implement other test types.
-
-// Publishing self-test events:
+//
+// ## Publishing Self-Test Events:
 // 1. The Proximity Sensor uses sns_physical_sensor_test_event message to publish
 //    a test completion event.
 // 2. The test_passed field in sns_physical_sensor_test_event is used to output the
@@ -69,24 +65,29 @@ import "sns_cal.proto";
 // 3. The test_data field in sns_physical_sensor_test_event may be used to output any
 //    driver-specific error data.
 
+syntax = "proto2";
+import "nanopb.proto";
+import "sns_cal.proto";
+import "sns_physical_sensor_test.proto";
+import "sns_std_sensor.proto";
 
-// Message IDs for proximity Sensor
+
+// @brief Message IDs for proximity Sensor
 enum sns_proximity_msgid {
   option (nanopb_enumopt).long_names = false;
 
-  // A proximity data event from a proximity sensor with
+  // @brief A proximity data event from a proximity sensor with
   // SNS_STD_SENSOR_ATTRID_STREAM_TYPE == SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE
-  //
   // Message: sns_proximity_event
   SNS_PROXIMITY_MSGID_SNS_PROXIMITY_EVENT  = 769;
 
-  // A proximity data event from a proximity sensor with
+  // @brief A proximity data event from a proximity sensor with
   // SNS_STD_SENSOR_ATTRID_STREAM_TYPE == SNS_STD_SENSOR_STREAM_TYPE_STREAMING
-  //
   // Message: sns_proximity_event_recurrent
   SNS_PROXIMITY_MSGID_SNS_PROXIMITY_EVENT_RECURRENT  = 1031;
 }
 
+// @brief Event Types of Proximity Sensor
 enum sns_proximity_event_type {
   option (nanopb_enumopt).long_names = false;
 
@@ -94,28 +95,28 @@ enum sns_proximity_event_type {
   SNS_PROXIMITY_EVENT_TYPE_NEAR  = 1;
 }
 
-// Events types from proximity Sensor
+// @brief Event from proximity Sensor
 message sns_proximity_event
 {
-  // Proximity NEAR/FAR output event
+  // @brief Proximity NEAR/FAR output event
   required sns_proximity_event_type proximity_event_type = 1 [default = SNS_PROXIMITY_EVENT_TYPE_FAR];
 
-  // Proimity sensor raw data
+  // @brief Proimity sensor raw data
   required uint32 raw_adc = 2;
 
-  // Proximity sensor sample status
+  // @brief Proximity sensor sample status
   required sns_std_sensor_sample_status status = 3 [default = SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE];
 }
 
+// @brief Recurrent Event from Proximity Sensor
 message sns_proximity_event_recurrent
 {
-  // Proximity NEAR/FAR output event
+  // @brief Proximity NEAR/FAR output event
   required sns_proximity_event_type proximity_event_type = 1 [default = SNS_PROXIMITY_EVENT_TYPE_FAR];
 
-  // Proimity sensor raw data
+  // @brief Proimity sensor raw data
   required uint32 raw_adc = 2;
 
-  // Proximity sensor sample status
+  // @brief Proximity sensor sample status
   required sns_std_sensor_sample_status status = 3 [default = SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE];
 }
-
