@@ -1,0 +1,6 @@
+cc_library_headers {
+    name: "libsensinghubcommon_headers",
+    export_include_dirs: ["inc"],
+    owner: "qti",
+    proprietary: true,
+}
