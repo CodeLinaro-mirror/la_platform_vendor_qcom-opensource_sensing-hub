@@ -295,11 +295,6 @@ enum sns_std_sensor_attr_id
   // Data Type: Integer Array
   SNS_STD_SENSOR_ATTRID_RIGID_BODY = 19;
 
-  // @brief Location and orientation of sensor element in the device frame.
-  // OPTIONAL -- DEPRECATED
-  // Data Type: Float[12] Array
-  SNS_STD_SENSOR_ATTRID_PLACEMENT = 20;
-
   // @brief True for a physical Sensor, false for virtual or fusion Sensors
   // OPTIONAL
   // Data Type: Boolean
