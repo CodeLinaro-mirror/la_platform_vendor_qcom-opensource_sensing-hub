@@ -50,20 +50,18 @@
 //     sensor hardware of the same model on a platform.
 // 16. SNS_STD_SENSOR_ATTRID_RIGID_BODY attribute value (sns_std_sensor_rigid_body_type) as the rigid
 //     body on which the sensor hardware is mounted.
-// 17. SNS_STD_SENSOR_ATTRID_PLACEMENT attribute value as the location and orientation of
-//     the sensor hardware.
-// 18. SNS_STD_SENSOR_ATTRID_PHYSICAL_SENSOR attribute value (bool) to indicate if the Sensor is
+// 17. SNS_STD_SENSOR_ATTRID_PHYSICAL_SENSOR attribute value (bool) to indicate if the Sensor is
 //     a physical sensor
-// 19. SNS_STD_SENSOR_ATTRID_PHYSICAL_SENSOR_TESTS attribute value as array of supported
+// 18. SNS_STD_SENSOR_ATTRID_PHYSICAL_SENSOR_TESTS attribute value as array of supported
 //     sns_physical_sensor_test_type test types.
-// 20. SNS_STD_SENSOR_ATTRID_SELECTED_RESOLUTION attribute value chosen from the
+// 19. SNS_STD_SENSOR_ATTRID_SELECTED_RESOLUTION attribute value chosen from the
 //     SNS_STD_SENSOR_ATTRID_RESOLUTIONS attribute array.
-// 21. SNS_STD_SENSOR_ATTRID_SELECTED_RANGE attribute value chosen from the
+// 20. SNS_STD_SENSOR_ATTRID_SELECTED_RANGE attribute value chosen from the
 //     SNS_STD_SENSOR_ATTRID_RANGES array.
-// 22. SNS_STD_SENSOR_ATTRID_ADDITIONAL_LOW_LATENCY_RATES attribute as a float array of supported
+// 21. SNS_STD_SENSOR_ATTRID_ADDITIONAL_LOW_LATENCY_RATES attribute as a float array of supported
 //     sample rates in Hz additional to rates in SNS_STD_SENSOR_ATTRID_RATES. This is for use only
 //      by low latency clients like direct report mode.
-// 23. SNS_STD_SENSOR_ATTRID_SERIAL_NUM attribute value (string) as the serial number of the sensor.
+// 22. SNS_STD_SENSOR_ATTRID_SERIAL_NUM attribute value (string) as the serial number of the sensor.
 // 
 // Note: See Sensor specific .proto files for additional Sensor specific attribute information.
 //
@@ -294,6 +292,8 @@ enum sns_std_sensor_attr_id
   // OPTIONAL (see note)
   // Data Type: Integer Array
   SNS_STD_SENSOR_ATTRID_RIGID_BODY = 19;
+
+  reserved 20;
 
   // @brief True for a physical Sensor, false for virtual or fusion Sensors
   // OPTIONAL
