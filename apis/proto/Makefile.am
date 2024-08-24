@@ -5,6 +5,8 @@
 
 AM_CPPFLAGS = -I./
 
+proto_list = $(shell find  $(srcdir)/ -name "*.proto")
+
 nodist_proto_SOURCES = nanopb.pb.cc                         \
                        sns_std_sensor.pb.cc                 \
                        sns_physical_sensor_test.pb.cc       \
@@ -82,6 +84,8 @@ BUILT_SOURCES = nanopb.pb.h                         \
                 sns_gravity.pb.h
 
 sources_libsensinghub = $(nodist_proto_SOURCES)
+
+include_HEADERS = $(BUILT_SOURCES) $(proto_list)
 
 library_includedir = $(pkgincludedir)
 

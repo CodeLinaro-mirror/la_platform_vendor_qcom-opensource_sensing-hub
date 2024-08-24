@@ -7,6 +7,9 @@ cpp_sources = ./src/SessionFactory.cpp
 
 requiredlibs = -ldl
 
+include_HEADERS = ./inc/ISession.h        \
+                  ./inc/SessionFactory.h     \
+                  ../../common/inc/suid.h
 
 library_includedir = $(pkgincludedir)
 
