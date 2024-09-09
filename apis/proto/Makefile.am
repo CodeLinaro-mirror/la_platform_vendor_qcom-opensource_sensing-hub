@@ -6,6 +6,8 @@
 AM_CPPFLAGS = -I./
 
 proto_list = $(shell find  $(srcdir)/ -name "*.proto")
+proto_filesdir = /etc/sensors/proto
+proto_files_DATA = $(proto_list)
 
 nodist_proto_SOURCES = nanopb.pb.cc                         \
                        sns_std_sensor.pb.cc                 \
