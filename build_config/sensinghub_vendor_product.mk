@@ -1,2 +1,4 @@
-PRODUCT_PACKAGES += libsensinghubapi
-PRODUCT_PACKAGES += libsensinghubsession
+SENSING_HUB_PRODUCTS := libsensinghubapi
+SENSING_HUB_PRODUCTS += libsensinghubsession
+
+PRODUCT_PACKAGES += SENSING_HUB_PRODUCTS
