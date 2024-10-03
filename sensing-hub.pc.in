@@ -5,6 +5,6 @@ includedir=@includedir@
 
 Name: sensing-hub
 Description: sensing-hub library
-Version: @VERSION@
+Version: @LT_VERSION@
 Libs: -L${libdir} -lsensinghubapi -lsensinghubsession
 Cflags: -I${includedir}/sensing-hub/common/inc/ -I${includedir}/sensing-hub/session/1.0/inc/

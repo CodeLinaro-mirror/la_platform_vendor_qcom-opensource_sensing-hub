@@ -98,5 +98,5 @@ requiredlibs_sensinghubapi = @PROTOBUF_LIBS@
 libsensinghubapi_la_CC = @CC@
 libsensinghubapi_la_SOURCES = $(sources_libsensinghub)
 libsensinghubapi_la_CFLAGS = $(AM_CFLAGS) @PROTOBUF_CFLAGS@
-libsensinghubapi_la_LDFLAGS = -shared -version-info 1:0:0 @LDFLAGS@
+libsensinghubapi_la_LDFLAGS = -shared @LDFLAGS@ -version-number @LT_VERSION_NUMBER@
 libsensinghubapi_la_LIBADD = $(requiredlibs_sensinghubapi)
