@@ -2,7 +2,7 @@ cc_library_shared {
     name: "libsensinghubapi",
     rtti: false,
     srcs: [
-        ":libprotobuf-internal-descriptor-proto",
+        "google/protobuf/descriptor.proto",
         "nanopb.proto",
         "sns_std_sensor.proto",
         "sns_sar.proto",
@@ -50,9 +50,6 @@ cc_library_shared {
         "-fexceptions",
     ],
     proto: {
-        include_dirs: [
-            "external/protobuf/src",
-        ],
         type: "lite",
         canonical_path_from_root: false,
         export_proto_headers: true,
