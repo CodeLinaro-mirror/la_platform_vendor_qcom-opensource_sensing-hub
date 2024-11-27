@@ -15,6 +15,7 @@
 // 2. SNS_STD_SENSOR_ATTRID_STREAM_TYPE: SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE
 // 3. SNS_STD_SENSOR_ATTRID_API attribute contains "sns_device_mode.proto"
 // 4. See sns_std_sensor.proto for other attributes.
+// 5. Change SNS_STD_SENSOR_ATTRID_VENDOR to OEM, if OEM specific device mode(s) added
 //
 // ## Processing Stream Requests:
 // 1. The Device Mode sensor uses the SNS_STD_SENSOR_MSGID_SNS_STD_ON_CHANGE_CONFIG
@@ -55,6 +56,17 @@ enum sns_device_mode
   SNS_DEVICE_MODE_WIFI_SCAN  = 6;
   SNS_DEVICE_MODE_BLUETOOTH_CONNECTIVITY  = 7;
   SNS_DEVICE_MODE_BLUETOOTH_SCAN  = 8;
+  // Qualcomm specific ENUMs expansion shall grow in ascending order i.e., from onwards of 9.
+
+  // unspecified device mode entries are available for customer specific use-cases.
+  // Guidance:
+  // Customer specific ENUMs expansion shall grow downwards starting from 62.
+  // customer to include sensor/vendor names to a OEM specific ENUM string for easy
+  // identification by intended clients.
+  // Example: SNS_DEVICE_MODE_OEM_HOTSPOT = 62;
+
+
+  SNS_DEVICE_MODE_MAX= 63;
 }
 
 // @brief Device Mode State ID
