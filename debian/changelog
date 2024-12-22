@@ -1,0 +1,5 @@
+qcom-sensing-hub (1.0.0) noble; urgency=low
+
+  * Initial release.
+
+ -- Bhanu Vivek Matsa <quic_bmasta@quicinc.com>  Wed, 21 Jan 2025 20:14:14 -0800

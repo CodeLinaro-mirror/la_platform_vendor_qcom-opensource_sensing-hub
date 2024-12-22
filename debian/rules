@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_install:
+	dh_install -pqcom-sensing-hub-dev common/inc usr/include/sensing-hub/common
+	dh_install -pqcom-sensing-hub-dev session/1.0/inc usr/include/sensing-hub/session/1.0
+	dh_install
+	rm $(CURDIR)/debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/*.la
