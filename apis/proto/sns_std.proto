@@ -13,7 +13,6 @@ import public "sns_std_type.proto";
 
 
 // @brief Framework defined message IDs:
-// NOTE: 250-255 Are reserved
 enum sns_std_msgid {
   option (nanopb_enumopt).long_names = false;
 
@@ -168,7 +167,7 @@ message sns_std_debug_resp {
 
   // @brief Human-readable debug string
   // If "partial_resp==true", then multiple debug_string should be concatenated
-  // to retrive the full string
+  // to retrieve the full string
   optional string debug_string = 2;
 
   // @brief Binary debug data, as defined by a proto file.

@@ -38,9 +38,11 @@
 //    Y-axis: parallel to the screen pointing to the top
 //    Z-axis: perpendicular to the screen pointing towards the user
 // 4. Data in the stream event is ordered as:
+//    @code
 //    data[0] = X-axis
 //    data[1] = Y-axis
 //    data[2] = Z-axis
+//    @endcode
 // 5. Each stream event publishes an accuracy field:
 //    SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE to mark invalid samples when hardware is
 //    yet to stabilize after the sensor is configured.

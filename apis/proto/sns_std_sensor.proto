@@ -209,7 +209,7 @@ enum sns_std_sensor_attr_id
   SNS_STD_SENSOR_ATTRID_RATES = 6;
 
   // @brief Supported resolutions
-  // Note: Length of array must the the same as the array in
+  // Note: Length of array must the same as the array in
   //       SNS_STD_SENSOR_ATTRID_RANGES
   // OPTIONAL
   // Data Type: Float Array
@@ -235,7 +235,7 @@ enum sns_std_sensor_attr_id
 
   // @brief Supported dynamic ranges (aka peak-to-peak measurement range)
   // as (min, max)
-  // Note: Length of array must the the same as the array in
+  // Note: Length of array must the same as the array in
   //       SNS_STD_SENSOR_ATTRID_RESOLUTIONS
   // OPTIONAL
   // Data Type: (Float, Float) array
@@ -387,7 +387,7 @@ enum sns_std_sensor_stream_type
   // Example: proximity, hall
   SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE     = 1;
 
-  // @brief Used for Sensors that have a single data event in reponse to a request.
+  // @brief Used for Sensors that have a single data event in response to a request.
   // Example: Significant motion (sig_motion) Sensor
   SNS_STD_SENSOR_STREAM_TYPE_SINGLE_OUTPUT = 2;
 }

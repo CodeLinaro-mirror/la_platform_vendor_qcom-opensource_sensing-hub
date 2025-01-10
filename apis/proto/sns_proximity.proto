@@ -19,7 +19,7 @@
 //    or SNS_STD_SENSOR_STREAM_TYPE_ON_CHANGE
 // 5. See sns_std_sensor.proto for other attributes.
 //
-// ## Procesing Stream Requests:
+// ## Processing Stream Requests:
 // 1. A Proximity Sensor may support either streaming or on-change
 //    mode. The operating mode is configured in the Registry.
 //  a. If a driver supports both modes, it must publish two sensors. One
@@ -101,7 +101,7 @@ message sns_proximity_event
   // @brief Proximity NEAR/FAR output event
   required sns_proximity_event_type proximity_event_type = 1 [default = SNS_PROXIMITY_EVENT_TYPE_FAR];
 
-  // @brief Proimity sensor raw data
+  // @brief Proximity sensor raw data
   required uint32 raw_adc = 2;
 
   // @brief Proximity sensor sample status
@@ -114,7 +114,7 @@ message sns_proximity_event_recurrent
   // @brief Proximity NEAR/FAR output event
   required sns_proximity_event_type proximity_event_type = 1 [default = SNS_PROXIMITY_EVENT_TYPE_FAR];
 
-  // @brief Proimity sensor raw data
+  // @brief Proximity sensor raw data
   required uint32 raw_adc = 2;
 
   // @brief Proximity sensor sample status

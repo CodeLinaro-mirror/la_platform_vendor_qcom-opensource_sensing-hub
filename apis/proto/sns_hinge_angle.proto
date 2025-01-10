@@ -9,7 +9,7 @@
 // @details The Hinge Angle Sensor detects the angle between two rigid bodies connected by a hinge
 // around which rotation can occur.
 //
-// The reference position for Hinge Angle measurement constitues the two rigid bodies being
+// The reference position for Hinge Angle measurement constitutes the two rigid bodies being
 // parallel to the ground, with surfaces in contact with each other and hinge connecting
 // the left edges of the two rigid bodies.
 // The rigid body that is located below is defined to be the primary rigid body.

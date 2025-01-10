@@ -34,14 +34,16 @@
 // 3. Data in the stream is adjusted to Sensing Hub coordinate system. See Sensing
 //    Hub documentation for a complete definition. As an example on a mobile phone:
 //    if the device is held with screen facing the user in its natural orientation:
-//    X-axis: parallel to the screen pointing to the right
-//    Y-axis: parallel to the screen pointing to the top
-//    Z-axis: perpendicular to the screen pointing towards the user
+//    - X-axis: parallel to the screen pointing to the right
+//    - Y-axis: parallel to the screen pointing to the top
+//    - Z-axis: perpendicular to the screen pointing towards the user
 //    Note: Positive rotation follows the right-hand rule.
 // 4. Data in the stream event is ordered as:
+//    @code
 //    data[0] = X-axis
 //    data[1] = Y-axis
 //    data[2] = Z-axis
+//    @endcode
 // 5. Each stream event publishes an accuracy field:
 //    SNS_STD_SENSOR_SAMPLE_STATUS_UNRELIABLE to mark invalid samples when hardware is
 //    yet to stabilize after the sensor is configured.
