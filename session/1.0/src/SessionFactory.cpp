@@ -33,7 +33,7 @@ int sessionFactory::loadSymbol() {
   }
   mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
   if(nullptr == mGetSessionSymbol) {
-    printf("error in loading the lib \n");
+    printf("error in loading the symbol \n");
     return -1;
   }
   return 0;
