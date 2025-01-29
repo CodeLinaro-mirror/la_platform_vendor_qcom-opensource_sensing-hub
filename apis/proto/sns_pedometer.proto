@@ -20,7 +20,7 @@
 // - The sns_step_event message is used to publish updated step count
 //   on every new step detected.
 // - The sns_step_event_config message is used to publish current step count
-//   at the time of connection to the client.
+//   at the time of connection to the client.\n
 // The Pedometer step event includes the latest step count accumulated since 
 // activation and is generated on every step detected.
 // All clients to Pedometer get the same step event.

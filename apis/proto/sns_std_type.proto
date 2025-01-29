@@ -148,4 +148,19 @@ enum sns_tech
   
   // @brief Camera Technology
   SNS_TECH_CAMERA = 3;
+  
+  // @brief Location Technology
+  SNS_TECH_LOCATION = 4;
+  
+  // @brief Modem Technology
+  SNS_TECH_MODEM = 5;
+  
+  // @brief Bluetooth Technology
+  SNS_TECH_BLUETOOTH = 6;
+  
+  // @brief WiFi Technology
+  SNS_TECH_WIFI = 7;
+  
+  // @brief Connectivity Technology
+  SNS_TECH_CONNECTIVITY = 8;
 }

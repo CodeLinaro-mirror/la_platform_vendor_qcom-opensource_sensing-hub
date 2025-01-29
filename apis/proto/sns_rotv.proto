@@ -38,11 +38,12 @@
 // axis rot_axis to go from the reference device orientation to the current
 // device orientation. The rotation is encoded as the four unitless x, y, z, w
 // components of a unit quaternion:
+// @code
 // sns_std_sensor_event::data[0] = rot_axis.x*sin(theta/2)
 // sns_std_sensor_event::data[1] = rot_axis.y*sin(theta/2)
 // sns_std_sensor_event::data[2] = rot_axis.z*sin(theta/2)
 // sns_std_sensor_event::data[3] = cos(theta/2)
-//
+// @endcode
 // Where:
 // - the x, y and z fields of rot_axis are the East-North-Up coordinates
 // of a unit length vector representing the rotation axis
