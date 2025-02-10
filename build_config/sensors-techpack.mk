@@ -1,5 +1,11 @@
 include vendor/qcom/opensource/sensing-hub/build_config/sensinghub_vendor_product.mk
 
+# In the HY22 vendor build, the image did not contain the
+#  sensors prebuilds which are packaged from prebuilt.mk
+ifeq (,$(wildcard $(QCPATH)/sensors-ship))
+include $(QCPATH)/techpack/artifacts/sensors/$(TARGET_BOARD_PLATFORM)/prebuilt.mk
+endif
+
 ifneq (,$(wildcard $(QCPATH)/sensors-ship))
 include $(QCPATH)/sensors-ship/build_config/sns_vendor_product.mk
 endif
