@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 
@@ -33,7 +33,7 @@ int sessionFactory::loadSymbol() {
   }
   mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
   if(nullptr == mGetSessionSymbol) {
-    printf("error in loading the lib \n");
+    printf("error in loading the symbol \n");
     return -1;
   }
   return 0;
