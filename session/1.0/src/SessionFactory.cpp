@@ -6,6 +6,7 @@
 #include "SessionFactory.h"
 #include <dlfcn.h>
 
+using namespace std;
 using namespace com::quic::sensinghub::session::V1_0 ;
 #ifdef SNS_VERSIONED_LIB_ENABLED
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so.1"
@@ -15,30 +16,48 @@ using namespace com::quic::sensinghub::session::V1_0 ;
 
 bool sessionFactory::mSymbolLoaded = false;
 sessionFactory::getSession_t sessionFactory::mGetSessionSymbol = nullptr;
+sessionFactory::getSensingHubIds_t sessionFactory::mGetSensingHubIdsSymbol = nullptr;
 
-ISession* sessionFactory::getSession() {
-  if(false == mSymbolLoaded) {
-    mSymbolLoaded = (0==loadSymbol())?true:false;
+ISession* sessionFactory::getSession(int hub_id) {
+  int status = 0;
+  if(true != mSymbolLoaded) {
+    status = loadSymbol();
   }
-  if(true == mSymbolLoaded &&
-     nullptr != mGetSessionSymbol) {
-    return mGetSessionSymbol();
+  if(0 == status) {
+    return mGetSessionSymbol(hub_id);
   } else {
     return nullptr;
   }
 }
 
+vector<int> sessionFactory::getSensingHubIds() {
+  vector<int> supportedHubIds;
+  int status = 0;
+  if(true != mSymbolLoaded) {
+    status = loadSymbol();
+  }
+  if(0 == status && nullptr != mGetSensingHubIdsSymbol) {
+    vector<int>* supportedHubIdsPtr =(vector<int>*)mGetSensingHubIdsSymbol();
+    for(int loop_idx = 0; loop_idx < supportedHubIdsPtr->size(); loop_idx++) {
+    supportedHubIds.push_back((*supportedHubIdsPtr)[loop_idx]);
+    }
+  }
+  return supportedHubIds;
+}
+
 int sessionFactory::loadSymbol() {
-  void* libHandler = nullptr;
-  libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
-  if(nullptr == libHandler){
-    printf("error in loading the lib \n");
-    return -1;
+  void* libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
+  if(nullptr != libHandler) {
+    mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
+    mGetSensingHubIdsSymbol = (getSensingHubIds_t)dlsym(libHandler, "getSensingHubIds");
+    if(nullptr != mGetSessionSymbol && nullptr != mGetSensingHubIdsSymbol) {
+      mSymbolLoaded = true;
+      return 0;
+    } else {
+      printf("error in loading the symbols \n");
+      return -1;
+    }
   }
-  mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
-  if(nullptr == mGetSessionSymbol) {
-    printf("error in loading the symbol \n");
-    return -1;
-  }
-  return 0;
+  printf("error in loading the lib \n");
+  return -1;
 }
