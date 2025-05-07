@@ -3,6 +3,10 @@
 AM_CPPFLAGS = -I./inc/  \
               -I./../../common/inc/
 
+if ENABLE_VERSIONED_LIB
+  AM_CPPFLAGS += -DSNS_VERSIONED_LIB_ENABLED
+endif
+
 cpp_sources = ./src/SessionFactory.cpp
 
 requiredlibs = -ldl

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 
@@ -7,7 +7,11 @@
 #include <dlfcn.h>
 
 using namespace com::quic::sensinghub::session::V1_0 ;
+#ifdef SNS_VERSIONED_LIB_ENABLED
+#define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so.1"
+#else
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so"
+#endif
 
 bool sessionFactory::mSymbolLoaded = false;
 sessionFactory::getSession_t sessionFactory::mGetSessionSymbol = nullptr;
