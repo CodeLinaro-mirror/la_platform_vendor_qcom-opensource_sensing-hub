@@ -68,6 +68,12 @@ AC_ARG_WITH(systemd,
         [SYSTEMD="no"])
 AM_CONDITIONAL([USE_SYSTEMD], [test "x${SYSTEMD}" != "xno"])
 
+AC_ARG_ENABLE(versioned-lib,
+        AS_HELP_STRING([--enable-versioned-lib], [enable versioned libs for debian packages]),
+        [VERSIONED_LIB="yes"],
+        [VERSIONED_LIB="no"])
+AM_CONDITIONAL([ENABLE_VERSIONED_LIB], [test "x${VERSIONED_LIB}" != "xno"])
+
 m4_define([LT_MAJOR], [1])
 m4_define([LT_MINOR], [0])
 m4_define([LT_PATCH], [0])
