@@ -3,8 +3,8 @@
  * @file
  *
  * @brief  ISession offers simple and easy interface to the clients to
- *         - Facilitate interaction with Qualcomm Sensing Hub
- *         - Abstracts the underlying transport layer mechanism.
+ * (1) Facilitate interaction with Qualcomm Sensing Hub
+ * (2) Abstracts the underlying transport layer mechanism
  *
  * @copyright Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
@@ -33,11 +33,12 @@ using namespace ::com::quic::sensinghub;
   ============================================================================*/
 
 /**
- * @brief ISession interface
+ * @class ISession
+ * @brief ISession interface class provides methods to interact with QSH framework.
  *
  * @note Client needs to refer sessionFactory to create an instance of ISession
  * @example Clients can refer to the example code present at :
-            ../../../examples/SessionClient/SessionClient.cpp
+ *         ../../../examples/SessionClient/SessionClient.cpp
  */
 class ISession {
 public:
@@ -64,8 +65,8 @@ public:
    * The client should call this function only once per session.
    *
    * @return
-   *        0  Success
-   *       -1  Failure
+   *   -   0  Success.
+   *   -  -1  Failure.
    */
   virtual int open() = 0;
 
@@ -82,10 +83,10 @@ public:
    * @brief Set the callbacks for the given suid.
    *        Client needs to call only once per given suid.
    *
-   * @param [in] suid SUID for which callbacks are to be registered
-   * @param [in] respCB Response callback pointer
-   * @param [in] errorCB Error callback pointer
-   * @param [in] eventCB Event callback pointer
+   * @param [in] suid      SUID for which callbacks are to be registered.
+   * @param [in] respCB    Response callback pointer.
+   * @param [in] errorCB   Error callback pointer.
+   * @param [in] eventCB   Event callback pointer.
    *
    * @note All parameters are mandatory.
    * - Incase SUID is already registered, callbacks are updated with new ones.
@@ -95,8 +96,8 @@ public:
    * - For any unregistered SUID, passing nullptr for all callback functions is considered as an error.
    *
    * @return
-   *        0  Success
-   *       -1  Failure, if all callback functions are nullptr for an unregistered SUID
+   *   - 0  Success.
+   *   - -1 Failure, if all callback functions are nullptr for an unregistered SUID.
    */
   virtual int setCallBacks(suid suid, respCallBack respCB, errorCallBack errorCB, eventCallBack eventCB) = 0;
 
@@ -104,16 +105,16 @@ public:
    * @brief Asynchronously sends a protocol buffer (proto)
    * encoded message to the QSH framework
    *
-   * @param [in] suid Unique SUID of the sensor for which request will be sent
+   * @param [in] suid    Unique SUID of the sensor for which request will be sent.
    * @param [in] message Proto encoded request message, formulated with
-   *                     client API for the given sensor
+   *                     client API for the given sensor.
    *
    * @return
-   *        0  Success
-   *       -1  Failure
-   *             - if client tries to send request over a closed session
-   *             - if encoded message size exceeds the permissible size
-   *             - if sending message fails due to channel related issue
+   *    - 0   Success
+   *    - -1  Failure
+   *         - if client tries to send request over a closed session
+   *         - if encoded message size exceeds the permissible size
+   *         - if sending message fails due to channel related issue
    */
   virtual int sendRequest(suid suid, std::string message) = 0;
 
