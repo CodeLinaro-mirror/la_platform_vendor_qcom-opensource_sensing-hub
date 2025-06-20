@@ -1,4 +1,4 @@
-Source:qcom-sensing-hub
+Source: qcom-sensing-hub
 Section: libs
 Priority: optional
 Maintainer: Bhanu Vivek Matsa <quic_bmasta@quicinc.com>
