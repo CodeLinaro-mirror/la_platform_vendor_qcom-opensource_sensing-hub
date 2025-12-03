@@ -19,6 +19,10 @@ struct suid
   {
     return (low == rhs.low && high == rhs.high);
   }
+  bool operator!=(const suid& rhs) const
+  {
+    return !(*this == rhs);
+  }
   uint64_t low, high;
 };
 
