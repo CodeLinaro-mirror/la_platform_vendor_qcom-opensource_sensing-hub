@@ -4,6 +4,7 @@
  */
 
 #pragma once
+#include <cstdint>
 namespace com {
 namespace quic {
 namespace sensinghub {
