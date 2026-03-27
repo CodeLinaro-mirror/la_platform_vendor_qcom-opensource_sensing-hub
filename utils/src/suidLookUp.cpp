@@ -83,7 +83,7 @@ void suidLookUp::requestSuid(std::string datatype, bool default_only)
     pb_ostream_t payload_stream = pb_ostream_from_buffer(encoded_payload, sizeof(encoded_payload));
     sns_suid_req suid_req = sns_suid_req_init_default;
     qshPb::pb_buffer_arg buffer_arg = (qshPb::pb_buffer_arg){
-      .buf = datatype.c_str(), 
+      .buf = datatype.c_str(),
       .buf_len = datatype.length() + 1
     };
 
@@ -204,7 +204,7 @@ bool suid_decode_event(pb_istream_t *stream, const pb_field_t *field,
     *(ctx->datatype) = "SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT";
   } else if(msg_id == SNS_SUID_MSGID_SNS_SUID_EVENT) {
     const char* datatype =  (char *)datatype_buf.buf;
-    sns_logi("suid_event for %s, num_suids=%d, ts=%fs", datatype,
+    sns_logd("suid_event for %s, num_suids=%d, ts=%fs", datatype,
               suid_vector.size(),
               duration_cast<duration<float>>(high_resolution_clock::now().
                                               time_since_epoch()).count());
@@ -241,7 +241,7 @@ void suidLookUp::handleQshEvent(const uint8_t *data, size_t size, uint64_t timeS
         .datatype = &datatype
     };
     pb_istream_t stream = pb_istream_from_buffer(
-      (const pb_byte_t *)data, 
+      (const pb_byte_t *)data,
       static_cast<pb_size_t>(size));
     sns_client_event_msg event  = sns_client_event_msg_init_default;
     event.events.funcs.decode = &suid_decode_event; //called for each repeated event
