@@ -17,8 +17,8 @@ using namespace std;
 using namespace std::chrono;
 
 struct suid_decode_context {
-    std::vector<suid> *suids;
-    std::string *datatype;
+    std::vector<std::vector<suid>> *suids;
+    std::vector<std::string> *datatype;
 };
 
 suidLookUp::suidLookUp(suidEventCb cb, int hubID)
@@ -136,20 +136,6 @@ void suidLookUp::requestSuid(std::string datatype, bool default_only)
     }
 }
 
-uint32_t
-get_msg_id(pb_istream_t *stream)
-{
-  sns_client_event_msg_sns_client_event event =
-    sns_client_event_msg_sns_client_event_init_default;
-
-  if(!pb_decode(stream, sns_client_event_msg_sns_client_event_fields, &event)) {
-    sns_loge("lookup: sns_client_event_msg decode failed %s", PB_GET_ERROR(stream));
-  } else {
-    return event.msg_id;
-  }
-  return 0;
-}
-
 bool suid_decode_event(pb_istream_t *stream, const pb_field_t *field,
                                void **arg)
 {
@@ -168,10 +154,6 @@ bool suid_decode_event(pb_istream_t *stream, const pb_field_t *field,
   event.payload.funcs.decode = &qshPb::decode_payload;
   event.payload.arg = &data;
 
-  pb_istream_t stream_cpy = *stream;
-  uint32_t msg_id = get_msg_id(&stream_cpy);
-  sns_logd("event msg_id=%d", msg_id);
-
   if(!pb_decode(stream, sns_client_event_msg_sns_client_event_fields,
                       &event))
   {
@@ -179,41 +161,50 @@ bool suid_decode_event(pb_istream_t *stream, const pb_field_t *field,
     return false;
   }
 
-  pb_istream_t sub_stream = pb_istream_from_buffer(
-    reinterpret_cast<const pb_byte_t *>(data.buf),
-    data.buf_len
-  );
-
-  sns_suid_event suid_event = sns_suid_event_init_default;
-  std::vector<sns_std_suid> suid_vector;
-  qshPb::pb_buffer_arg datatype_buf;
-  suid_event.suid.funcs.decode = &qshPb::decode_suid;
-  suid_event.suid.arg = &suid_vector;
-  suid_event.data_type.funcs.decode = &qshPb::decode_payload;
-  suid_event.data_type.arg = &datatype_buf;
-
-  if(!pb_decode(&sub_stream, sns_suid_event_fields, &suid_event))
-  {
-    sns_loge("lookup: sns_suid_event decoding failed %s", PB_GET_ERROR(&sub_stream));
-    return false;
-  }
-
+  uint32_t msg_id = event.msg_id;
+  sns_logd("event msg_id=%d", msg_id);
   if (msg_id == SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT){
     sns_logi("Received SUID Discovery Done Event");
-    ctx->suids->clear();
-    *(ctx->datatype) = "SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT";
+    ctx->suids->emplace_back(std::vector<suid>{});
+    ctx->datatype->emplace_back("SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT");
   } else if(msg_id == SNS_SUID_MSGID_SNS_SUID_EVENT) {
+    if (!data.buf || data.buf_len == 0) {
+        sns_loge("Empty payload in client event");
+        return false;
+    }
+
+    pb_istream_t sub_stream = pb_istream_from_buffer(
+      reinterpret_cast<const pb_byte_t *>(data.buf),
+      data.buf_len
+    );
+
+    sns_suid_event suid_event = sns_suid_event_init_default;
+    std::vector<sns_std_suid> suid_vector;
+    qshPb::pb_buffer_arg datatype_buf;
+    suid_event.suid.funcs.decode = &qshPb::decode_suid;
+    suid_event.suid.arg = &suid_vector;
+    suid_event.data_type.funcs.decode = &qshPb::decode_payload;
+    suid_event.data_type.arg = &datatype_buf;
+
+    if(!pb_decode(&sub_stream, sns_suid_event_fields, &suid_event))
+    {
+      sns_loge("lookup: sns_suid_event decoding failed %s", PB_GET_ERROR(&sub_stream));
+      return false;
+    }
+
     const char* datatype =  (char *)datatype_buf.buf;
     sns_logd("suid_event for %s, num_suids=%d, ts=%fs", datatype,
               suid_vector.size(),
               duration_cast<duration<float>>(high_resolution_clock::now().
                                               time_since_epoch()).count());
     /* iterate over all events in the message */
+    std::vector<suid> suid_list;
     for (int i = 0; i < suid_vector.size(); i++) {
       sns_std_suid _suid = suid_vector.at(i);
-      ctx->suids->push_back(suid(_suid.suid_low,_suid.suid_high));
+      suid_list.push_back(suid(_suid.suid_low,_suid.suid_high));
     }
-    *(ctx->datatype) = std::string(datatype);
+    ctx->suids->emplace_back(std::move(suid_list));
+    ctx->datatype->emplace_back(std::string(datatype));
   } else {
     sns_loge("invalid event msg_id=%d", msg_id);
     return false;
@@ -233,30 +224,31 @@ void suidLookUp::handleQshEvent(const uint8_t *data, size_t size, uint64_t timeS
         }
     }
     /* parse the pb encoded event */
-    std::vector<suid> suid_vector;
-    std::string datatype;
+    std::vector<std::vector<suid>> suids_vector;
+    std::vector<std::string> datatype_vector;
 
     suid_decode_context arg_context = {
-        .suids = &suid_vector,
-        .datatype = &datatype
+        .suids = &suids_vector,
+        .datatype = &datatype_vector
     };
     pb_istream_t stream = pb_istream_from_buffer(
       (const pb_byte_t *)data,
-      static_cast<pb_size_t>(size));
+      size);
     sns_client_event_msg event  = sns_client_event_msg_init_default;
     event.events.funcs.decode = &suid_decode_event; //called for each repeated event
     event.events.arg          = &arg_context;
 
     if (!pb_decode(&stream, sns_client_event_msg_fields, &event)){
-      sns_loge("lookup: sns_client_event encoding failed %s", PB_GET_ERROR(&stream));
-      return;
+      sns_loge("lookup: sns_client_event decoding failed %s", PB_GET_ERROR(&stream));
     }
-    sns_logv("suid_event for %s, num_suids=%d, ts=%fs", datatype.c_str(),
-          suid_vector.size(),
-          duration_cast<duration<float>>(high_resolution_clock::now().
-                                        time_since_epoch()).count());
     /* send callback for this datatype */
-    mEventCb(datatype, suid_vector);
+    if(suids_vector.size() == datatype_vector.size() && datatype_vector.size() != 0){
+      for(size_t i=0;i<datatype_vector.size();i++)
+        if(datatype_vector[i] != "SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT")
+          mEventCb(datatype_vector[i], suids_vector[i]);
+    } else {
+      sns_loge("lookup: sns_client_event events mismatch");
+    }
 }
 
 locate::locate()
