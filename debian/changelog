@@ -1,3 +1,9 @@
+qcom-sensing-hub (1.0.3) noble; urgency=low
+
+  * Update sensing hub changelog
+
+ -- Tharunkumar Naidu koyya <koyythar@qti.qualcomm.com>  Sun, 17 May 2026 12:34:31 +0000
+
 qcom-sensing-hub (1.0.2) noble; urgency=low
 
   * Add operator override in suid
