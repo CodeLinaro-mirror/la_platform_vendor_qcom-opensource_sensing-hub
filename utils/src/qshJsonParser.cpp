@@ -442,33 +442,24 @@ int qshJsonParser::parseConfigItem(char* json, uint32_t jsonLen)
 
 int32_t qshJsonParser::parseConfig(char* json, uint32_t jsonlen)
 {
-  int32_t cidx = 0;
+    int32_t cidx = 0;
 
-  if(cidx >= jsonlen || '{' != json[cidx++])
-  {
-    sns_loge("parseConfig: Missing open bracket %d ", mCurrLineNum);
-    cidx = 0;
-  }
-  else
-  {
-    do
-    {
-      cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
-      if('}' == json[cidx])
-        break;
-    } while(cidx < jsonlen && ',' == json[cidx] && cidx++);
-  }
+    cidx += getWhitespaceLen(json, jsonlen);
 
-  if(0 < cidx)
-  {
+    if (json[cidx] != '{') {
+        sns_loge("parse_config: Missing open bracket");
+        return -1;
+    }
+
+    cidx += parseConfigItem(&json[cidx], jsonlen - cidx);
+
     cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
-  }
-  if(0 < cidx && (cidx >= jsonlen || '}' != json[cidx++]))
-  {
-    sns_loge("parseConfig: Missing closing bracket Line No. %d ", mCurrLineNum);
-    cidx = 0;
-  }
-  return cidx;
+    if (json[cidx++] != '}') {
+        sns_loge("parse_config: Missing closing bracket");
+        return -1;
+    }
+
+    return cidx;
 }
 
 int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
