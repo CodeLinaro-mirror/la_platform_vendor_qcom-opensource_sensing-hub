@@ -37,7 +37,7 @@ public:
   /* fetches the hub name for a hub id */
   std::string getHubName(int hubID);
   /* returns if parser state has been updated from config file */
-  bool isFileLoaded();
+  bool isFileParsed();
 
 private:
   int mDeviceSocId;
@@ -62,7 +62,7 @@ private:
 
   bool mSensingHubNameIdMapFilled;
   bool mCommMapFilled;
-  bool mIsFileLoaded;
+  bool mIsFileParsed;
 
   int getWhitespaceLen(char const* str, uint32_t strLen);
 
