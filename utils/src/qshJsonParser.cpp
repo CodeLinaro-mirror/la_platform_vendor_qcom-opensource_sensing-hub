@@ -25,7 +25,7 @@ qshJsonParser::qshJsonParser():
   mClientCommValue(-1),
   mSensingHubNameIdMapFilled(false),
   mCommMapFilled(false),
-  mIsFileLoaded(false),
+  mIsFileParsed(false),
   mJsonSocId(-1),
   mDeviceSocId(-1)
 {
@@ -317,10 +317,6 @@ void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char 
     mReadCommAttr = false;
     mSensingHubNameIdMapFilled = false;
     mCommMapFilled= false;
-    mCurrLineNum = 0;
-    mJsonSocId = -1;
-    mJsonSocIdList.clear();
-    mHubIds.clear();
   }
 }
 
@@ -511,7 +507,7 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
         if(mJsonSocId == -1){
           sns_logi("Skipping JSON: soc_id=%d does not match target soc_id=%d",
             mJsonSocId, mDeviceSocId);
-          return -1;
+          return 0;
         }
       }
     }
@@ -526,15 +522,13 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
     }
     sns_logd("Parsing next group");
   } while(cidx < jsonlen && ',' == json[cidx] && cidx++);
-
   sns_logi("Parsing Complete");
   return 0;
 }
 
-bool qshJsonParser::isFileLoaded(){
-  return mIsFileLoaded;
+bool qshJsonParser::isFileParsed(){
+  return mIsFileParsed;
 }
-
 
 /* call this function to start parsing */
 int qshJsonParser::loadFile(const char* path)
@@ -578,6 +572,6 @@ int qshJsonParser::loadFile(const char* path)
     return -1;
   }
   free(fileContent);
-  mIsFileLoaded = true;
+  mIsFileParsed = true;
   return 0;
 }

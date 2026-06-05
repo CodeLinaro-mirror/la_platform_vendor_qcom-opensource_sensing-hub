@@ -8,6 +8,7 @@ cc_library_shared {
         "src/qshSSR.cpp",
         "src/qshJsonParser.cpp",
         "src/suidLookUp.cpp",
+        "src/qshPb.cpp",
     ],
     header_libs: [
         "libsensinghubcommon_headers",
@@ -28,8 +29,10 @@ cc_library_shared {
         "libutils",
         "libcutils",
         "liblog",
-        "libprotobuf-cpp-lite",
         "libsensinghubsession",
-        "libsensinghubapi",
+        "libsensinghubapi-c",
+    ],
+    static_libs: [
+        "libprotobuf-c-nano-32bit",
     ],
 }
