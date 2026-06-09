@@ -9,7 +9,6 @@
 
 syntax = "proto2";
 import "nanopb.proto";
-import "sns_client.proto";
 import "sns_std_type.proto";
 
 // @details Module providing a generic ipc defintion for connections to and from
@@ -43,7 +42,9 @@ import "sns_std_type.proto";
 // Client shall send "sns_client_ipc_connect" message to connect to the
 // sensor service
 message sns_client_ipc_connect {
-   // Empty payload.
+   // @brief Optional connection request payload encoded as bytes
+   // Refer to the service proto for the payload message definition
+   optional bytes payload = 1;
 }
 
 // @brief Connect acknowledgement message
@@ -55,6 +56,12 @@ message sns_client_ipc_connect_ack {
   // "connection_handle" shall be non-zero when connection is successful
   // "connection_handle" shall be zero when connection is failed
   optional fixed32 connection_handle = 1;
+
+  // @brief Maximum request payload size in bytes supported by the service.
+  optional fixed32 max_request_size = 2;
+
+  // @brief Maximum indication payload size in bytes sent by the service.
+  optional fixed32 max_indication_size = 3;
 }
 
 // @brief Disconnect message
@@ -72,8 +79,9 @@ message sns_client_ipc_req {
   // @brief Connection handle identifies the connection
   optional fixed32 connection_handle = 1;
 
-  // @brief Request message
-  optional sns_client_request_msg request = 2;
+  // @brief Request payload encoded as bytes
+  // Refer to the service proto for the payload message definition
+  optional bytes request = 2;
 }
 
 // @brief Indication message
@@ -81,8 +89,9 @@ message sns_client_ipc_ind {
   // @brief Connection handle identifies the connection
   optional fixed32 connection_handle = 1;
 
-  // @brief Event message
-  optional sns_client_event_msg event = 2;
+  // @brief Indication payload encoded as bytes
+  // Refer to the service proto for the payload message definition
+  optional bytes event = 2;
 }
 
 // @brief Response message
@@ -99,17 +108,19 @@ message sns_client_ipc_resp {
 // @brief Version request message
 message sns_client_ipc_version_req {
 
-  // @brief Version request message
-  optional sns_client_version_request_msg version_request = 1;
+  // @brief Version request payload encoded as bytes
+  // Refer to the service proto for the payload message definition
+  optional bytes version_request = 1;
 }
 
 // @brief Version response message
-// Version response message is sent in response to every version request 
+// Version response message is sent in response to every version request
 // message
 message sns_client_ipc_version_resp {
 
-  // @brief Version response message
-  optional sns_client_version_response_msg version_response = 1;
+  // @brief Version response payload encoded as bytes.
+  // Refer to the service proto for the payload message definition.
+  optional bytes version_response = 1;
 }
 
 // @brief Top level message for all clients.

@@ -10,9 +10,7 @@
 #include "qshJsonParser.h"
 #include "qshLog.h"
 
-#define MAX_DATA_VALUE_LEN 15
-#define COMM_TYPE_QMI    "0"
-#define COMM_TYPE_GLINK  "1"
+#define MAX_DATA_VALUE_LEN 256
 
 using namespace std;
 
@@ -21,12 +19,10 @@ qshJsonParser::qshJsonParser():
   mJsonSocId(-1),
   mReadCommAttr(false),
   mIsClientCommGrp(false),
+  mIsDrcConfigGrp(false),
+  mIsAppsLink(false),
   mSensingHubId(-1),
   mPlatformId(""),
-  mClientCommType(""),
-  mClientCommValue(-1),
-  mSensingHubNameIdMapFilled(false),
-  mCommMapFilled(false),
   mIsFileParsed(false)
 {
   mDeviceSocId = readSocId();
@@ -67,45 +63,40 @@ int qshJsonParser::readSocId()
 
 void qshJsonParser::resetParserState()
 {
-    mSensingHubId = -1;
-    mPlatformId.clear();
-    mClientCommType.clear();
-    mClientCommValue = -1;
+  mSensingHubId = -1;
+  mPlatformId.clear();
+  mClientCommConfig = comm_config();
+  mDrcConfig = comm_config();
 
-    mReadCommAttr = false;
-    mIsClientCommGrp = false;
+  mReadCommAttr = false;
+  mIsClientCommGrp = false;
+  mIsDrcConfigGrp = false;
+  mIsAppsLink = false;
 
-    mSensingHubNameIdMapFilled = false;
-    mCommMapFilled = false;
-
-    mCurrLineNum = 0;
-    mJsonSocId = -1;
-    mJsonSocIdList.clear();
-    mHubIds.clear();
+  mCurrLineNum = 0;
+  mJsonSocId = -1;
+  mJsonSocIdList.clear();
+  mHubIds.clear();
 }
 
-int qshJsonParser::getCommType(int hubID)
+comm_config qshJsonParser::getClientCommConfig(int hubID)
 {
-  if(0 == mSensingHubCommMap.count(hubID))
-    return -1;
-
-  try
+  if(0 == mSensingHubClientCommMap.count(hubID))
   {
-    return stoi(mSensingHubCommMap.at(hubID).first);
+    sns_loge("getClientCommConfig: hub_id=%d not found", hubID);
+    return comm_config();
   }
-  catch(const exception& e)
-  {
-    sns_loge("not able to get comm type, error: %s", e.what());
-    return -1;
-  }
+  return mSensingHubClientCommMap.at(hubID);
 }
 
-int qshJsonParser::getCommHandleAttrs(int hubID)
+comm_config qshJsonParser::getDrcConfig(int hubID)
 {
-  if(0 == mSensingHubCommMap.count(hubID))
-    return -1;
-
-  return mSensingHubCommMap.at(hubID).second;
+  if(0 == mSensingHubDrcMap.count(hubID))
+  {
+    sns_loge("getDrcConfig: hub_id=%d not found", hubID);
+    return comm_config();
+  }
+  return mSensingHubDrcMap.at(hubID);
 }
 
 std::vector<int> qshJsonParser::getHubIdList()
@@ -113,11 +104,10 @@ std::vector<int> qshJsonParser::getHubIdList()
   return mHubIds;
 }
 
-int qshJsonParser:: getHubId(std::string hubName)
+int qshJsonParser::getHubId(std::string hubName)
 {
   if(0 == mSensingHubNameIdMap.count(hubName))
     return -1;
-
   return mSensingHubNameIdMap.at(hubName);
 }
 
@@ -257,66 +247,100 @@ uint32_t qshJsonParser::parseItem(char* itemName, char* itemValue, char* json, u
   return cidx;
 }
 
+void qshJsonParser::commitClientCommConfig()
+{
+  if((-1 == mSensingHubId) || (mClientCommConfig.comm_type == -1))
+    return;
+
+  mSensingHubClientCommMap.insert({mSensingHubId, mClientCommConfig});
+
+  sns_logi("commitClientCommConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d",
+           mSensingHubId, mClientCommConfig.comm_type, mClientCommConfig.channel_name.c_str(),
+           mClientCommConfig.no_of_channels, mClientCommConfig.service_id);
+}
+
+void qshJsonParser::commitDrcConfig()
+{
+  if((-1 == mSensingHubId) || (mDrcConfig.comm_type == -1))
+    return;
+
+  mSensingHubDrcMap.insert({mSensingHubId, mDrcConfig});
+
+  sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d",
+           mSensingHubId, mDrcConfig.comm_type, mDrcConfig.channel_name.c_str(),
+           mDrcConfig.no_of_channels, mDrcConfig.service_id);
+}
+
 void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char * value)
 {
   if(0 == strcmp(grpName, ".client_comm"))
     mIsClientCommGrp = true;
 
+  if(0 == strcmp(grpName, ".direct_channel"))
+    mIsDrcConfigGrp = true;
+
   if(0 == strcmp(key, "platform_id"))
   {
-     mPlatformId = value;
+    mPlatformId = value;
+    if(-1 != mSensingHubId)
+    {
+      mSensingHubNameIdMap.insert({mPlatformId, mSensingHubId});
+    }
   }
   else if(0 == strcmp(key, "sensing_hub_id"))
   {
-     mSensingHubId = atoi(value);
-     mHubIds.push_back(mSensingHubId);
+    mSensingHubId = atoi(value);
+    mHubIds.push_back(mSensingHubId);
   }
   else if(0 == strcmp(key, "client_comm_type"))
   {
-     mClientCommType = value;
+    mClientCommConfig.comm_type = atoi(value);
+    sns_logd("updateSensingHubInfo: client_comm_type=%d", mClientCommConfig.comm_type);
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(key, "direct_channel_comm_type"))
+  {
+    mDrcConfig.comm_type = atoi(value);
+    sns_logd("updateSensingHubInfo: drc_comm_type=%d", mDrcConfig.comm_type);
+  }
+  else if(mIsClientCommGrp && 0 == strcmp(key, "channel_name"))
+  {
+    mClientCommConfig.channel_name = value;
+    sns_logd("updateSensingHubInfo: client_channel_name=%s", mClientCommConfig.channel_name.c_str());
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(key, "channel_name"))
+  {
+    mDrcConfig.channel_name = value;
+    sns_logd("updateSensingHubInfo: drc_channel_name=%s", mDrcConfig.channel_name.c_str());
+  }
+  else if(mIsClientCommGrp && 0 == strcmp(key, "no_of_channels") && mIsAppsLink)
+  {
+    mClientCommConfig.no_of_channels = atoi(value);
+    sns_logd("updateSensingHubInfo: client_no_of_channels=%d", mClientCommConfig.no_of_channels);
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(key, "no_of_channels"))
+  {
+    mDrcConfig.no_of_channels = atoi(value);
+    sns_logd("updateSensingHubInfo: drc_no_of_channels=%d", mDrcConfig.no_of_channels);
   }
   else if(mIsClientCommGrp && 0 == strcmp(key, "service_id"))
   {
-    if(COMM_TYPE_QMI == mClientCommType)
-      mClientCommValue = atoi(value);
-    mIsClientCommGrp = false;
+    mClientCommConfig.service_id = atoi(value);
+    sns_logd("updateSensingHubInfo: client_service_id=%d", mClientCommConfig.service_id);
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(key, "service_id"))
+  {
+    mDrcConfig.service_id = atoi(value);
+    sns_logd("updateSensingHubInfo: drc_service_id=%d", mDrcConfig.service_id);
   }
   else if(mIsClientCommGrp && 0 == strcmp(key, "link_name") && 0 != strcmp(value, "apps"))
   {
-    mSensingHubIdNameMap[mSensingHubId] = value;
+    mIsAppsLink = false;
+    if(0 == strcmp(grpName, ".client_comm"))
+      mSensingHubIdNameMap[mSensingHubId] = value;
   }
-  else if(mIsClientCommGrp && strcmp(value, "apps") && strcmp(key, "link_name"))
+  else if(mIsClientCommGrp && 0 == strcmp(key, "link_name") && 0 == strcmp(value, "apps"))
   {
-    mReadCommAttr = true;
-    mIsClientCommGrp = false;
-  }
-  else if(0 == strcmp(key, "no_of_channels") && mReadCommAttr)
-  {
-    if(COMM_TYPE_GLINK ==mClientCommType)
-      mClientCommValue = atoi(value);
-  }
-
-  if((-1 !=mSensingHubId) && (!mPlatformId.empty()))
-  {
-    mSensingHubNameIdMap.insert({mPlatformId, mSensingHubId});
-    mSensingHubNameIdMapFilled = true;
-  }
-
-  if(( -1 != mSensingHubId) && (!mClientCommType.empty()) && (-1 != mClientCommValue ))
-  {
-    mSensingHubCommMap.insert({mSensingHubId, {(std::string)mClientCommType, mClientCommValue}});
-    mCommMapFilled= true;
-  }
-
-  if(mSensingHubNameIdMapFilled && mCommMapFilled)
-  {
-    mSensingHubId = -1;
-    mPlatformId.clear();
-    mClientCommType.clear();
-    mClientCommValue = -1;
-    mReadCommAttr = false;
-    mSensingHubNameIdMapFilled = false;
-    mCommMapFilled= false;
+    mIsAppsLink = true;
   }
 }
 
@@ -324,7 +348,6 @@ int qshJsonParser::parseGroup(char const* grpName, char* json,
                             uint32_t jsonlen, uint32_t* len)
 {
   uint32_t cidx = 0;
-  bool failed = false;
 
   *len = 0;
 
@@ -369,6 +392,15 @@ int qshJsonParser::parseGroup(char const* grpName, char* json,
             return -1;
           }
           cidx += len;
+          if(0 == strcmp(key, ".client_comm")) {
+            commitClientCommConfig();
+            mIsClientCommGrp = false;
+            mClientCommConfig = comm_config();
+          } else if(0 == strcmp(key, ".direct_channel")) {
+            commitDrcConfig();
+            mIsDrcConfigGrp = false;
+            mDrcConfig = comm_config();
+          }
         }
         else
         {
@@ -530,6 +562,47 @@ bool qshJsonParser::isFileParsed(){
   return mIsFileParsed;
 }
 
+void qshJsonParser::printParserState()
+{
+  if (!mIsFileParsed) {
+    sns_logi("printParserState: file not yet parsed");
+    return;
+  }
+
+  sns_logi("=== qshJsonParser state ===");
+  sns_logi("  device_soc_id : %d", mDeviceSocId);
+  sns_logi("  json_soc_id   : %d", mJsonSocId);
+
+  sns_logi("  hub_ids (%zu):", mHubIds.size());
+  for (int id : mHubIds)
+    sns_logi("    [%d]", id);
+
+  sns_logi("  name->id map (%zu):", mSensingHubNameIdMap.size());
+  for (const auto& kv : mSensingHubNameIdMap)
+    sns_logi("    '%s' -> %d", kv.first.c_str(), kv.second);
+
+  sns_logi("  id->name map (%zu):", mSensingHubIdNameMap.size());
+  for (const auto& kv : mSensingHubIdNameMap)
+    sns_logi("    %d -> '%s'", kv.first, kv.second.c_str());
+
+  sns_logi("  client comm map (%zu):", mSensingHubClientCommMap.size());
+  for (const auto& kv : mSensingHubClientCommMap) {
+    const comm_config& c = kv.second;
+    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d",
+             kv.first, c.comm_type, c.channel_name.c_str(),
+             c.no_of_channels, c.service_id);
+  }
+
+  sns_logi("  drc map (%zu):", mSensingHubDrcMap.size());
+  for (const auto& kv : mSensingHubDrcMap) {
+    const comm_config& d = kv.second;
+    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d",
+             kv.first, d.comm_type, d.channel_name.c_str(),
+             d.no_of_channels, d.service_id);
+  }
+  sns_logi("===========================");
+}
+
 /* call this function to start parsing */
 int qshJsonParser::loadFile(const char* path)
 {
@@ -552,7 +625,6 @@ int qshJsonParser::loadFile(const char* path)
   if(NULL == fptr)
   {
     sns_loge("failed to open sensing_hub_config file");
-
     free(fileContent);
     return -1;
   }
@@ -573,5 +645,6 @@ int qshJsonParser::loadFile(const char* path)
   }
   free(fileContent);
   mIsFileParsed = true;
+  printParserState();
   return 0;
 }

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /** ============================================================================
  * @file
  *
@@ -125,6 +125,19 @@ public:
    *
    */
   virtual ~ISession(){};
+
+  /**
+   * @brief Initiates the client session created using getSession().
+   * Sets up and establishes communication between the client and the QSH framework.
+   * The client should call this function only once per session.
+   *
+   * @param [in] str  encoded message string passed during session open.
+   *
+   * @return
+   *   -   0  Success.
+   *   -  -1  Failure.
+   */
+  virtual int open(std::string str) = 0;
 protected:
 };
 

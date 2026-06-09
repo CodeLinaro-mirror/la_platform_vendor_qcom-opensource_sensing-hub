@@ -7,51 +7,59 @@
 #include <dlfcn.h>
 
 using namespace std;
-using namespace com::quic::sensinghub::session::V1_0 ;
+using namespace com::quic::sensinghub::session::V1_0;
+
 #ifdef SNS_VERSIONED_LIB_ENABLED
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so.1"
 #else
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so"
 #endif
 
-bool sessionFactory::mSymbolLoaded = false;
-sessionFactory::getSession_t sessionFactory::mGetSessionSymbol = nullptr;
+bool                       sessionFactory::mSymbolLoaded        = false;
+sessionFactory::getSession_t       sessionFactory::mGetSessionSymbol    = nullptr;
 sessionFactory::getSensingHubIds_t sessionFactory::mGetSensingHubIdsSymbol = nullptr;
 
 ISession* sessionFactory::getSession(int hub_id) {
+  return getSession(hub_id, false);
+}
+
+ISession* sessionFactory::getSession() {
+  return getSession(-1, false);
+}
+
+ISession* sessionFactory::getSession(int hub_id, bool direct_channel) {
   int status = 0;
-  if(true != mSymbolLoaded) {
+  if (true != mSymbolLoaded) {
     status = loadSymbol();
   }
-  if(0 == status) {
-    return mGetSessionSymbol(hub_id);
-  } else {
-    return nullptr;
+  if (0 == status) {
+    return mGetSessionSymbol(hub_id, direct_channel);
   }
+  return nullptr;
 }
 
 vector<int> sessionFactory::getSensingHubIds() {
   vector<int> supportedHubIds;
   int status = 0;
-  if(true != mSymbolLoaded) {
+  if (true != mSymbolLoaded) {
     status = loadSymbol();
   }
-  if(0 == status && nullptr != mGetSensingHubIdsSymbol) {
-    vector<int>* supportedHubIdsPtr =(vector<int>*)mGetSensingHubIdsSymbol();
-    for(int loop_idx = 0; loop_idx < supportedHubIdsPtr->size(); loop_idx++) {
-    supportedHubIds.push_back((*supportedHubIdsPtr)[loop_idx]);
+  if (0 == status && nullptr != mGetSensingHubIdsSymbol) {
+    vector<int>* supportedHubIdsPtr = (vector<int>*)mGetSensingHubIdsSymbol();
+    for (int loop_idx = 0; loop_idx < (int)supportedHubIdsPtr->size(); loop_idx++) {
+      supportedHubIds.push_back((*supportedHubIdsPtr)[loop_idx]);
     }
-    delete supportedHubIdsPtr;
   }
   return supportedHubIds;
 }
 
 int sessionFactory::loadSymbol() {
   void* libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
-  if(nullptr != libHandler) {
+  if (nullptr != libHandler) {
     mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
     mGetSensingHubIdsSymbol = (getSensingHubIds_t)dlsym(libHandler, "getSensingHubIds");
-    if(nullptr != mGetSessionSymbol && nullptr != mGetSensingHubIdsSymbol) {
+
+    if (nullptr != mGetSessionSymbol && nullptr != mGetSensingHubIdsSymbol) {
       mSymbolLoaded = true;
       return 0;
     } else {
