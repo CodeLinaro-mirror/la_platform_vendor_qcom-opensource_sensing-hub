@@ -10,9 +10,6 @@ extern "C" {
 #include "pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
-#include "sns_suid.pb.h"
-#include "sns_std_type.pb.h"
-#include "sns_client.pb.h"
 }
 
 #include <cinttypes>
