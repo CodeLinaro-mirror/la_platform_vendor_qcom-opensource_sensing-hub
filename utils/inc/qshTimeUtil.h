@@ -163,7 +163,7 @@ public:
 #else
        struct timespec timeElapsed;
        clock_gettime(CLOCK_REALTIME, &timeElapsed);
-       return updateQtimerToRealtimeOffset((uint64_t)(time_elapsed.tv_sec*NSEC_PER_SEC+timeElapsed.tv_nsec), forceUpdate);
+       return updateQtimerToRealtimeOffset((uint64_t)(timeElapsed.tv_sec*NSEC_PER_SEC+timeElapsed.tv_nsec), forceUpdate);
 #endif
     }
 

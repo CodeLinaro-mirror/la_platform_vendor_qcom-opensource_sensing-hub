@@ -285,9 +285,10 @@ bool getSuid() {
 
   /* using the suid of SUID Sensor for suid discovery request */
   suid uid;
-  sns_suid_sensor suid_sensor;
-  uid.low = sns_suid_sensor_suid_low_default;
-  uid.high = sns_suid_sensor_suid_high_default;
+  /* Use well-known SUID sensor defaults from sns_suid.proto */
+  sns_suid_sensor suid_sensor  = sns_suid_sensor_init_default;
+  uid.low = suid_sensor.suid_low;
+  uid.high = suid_sensor.suid_high;
 
   /* create a new ISession for suid discovery */
   unique_ptr<sessionFactory> factory = make_unique<sessionFactory>();
@@ -319,7 +320,7 @@ bool getSuid() {
    * (Please refer sns_client.proto and sns_suid.proto for more details)
    * */
 
-  char* data_type = sensorType;
+  const  char* data_type = sensorType;
   pb_byte_t encoded_payload[100];
   pb_ostream_t payload_stream = pb_ostream_from_buffer(encoded_payload, sizeof(encoded_payload));
 
