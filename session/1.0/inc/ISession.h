@@ -6,7 +6,8 @@
  * (1) Facilitate interaction with Qualcomm Sensing Hub
  * (2) Abstracts the underlying transport layer mechanism
  *
- * @copyright Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * @copyright 
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  *
  * ===========================================================================*/
@@ -126,18 +127,8 @@ public:
    */
   virtual ~ISession(){};
 
-  /**
-   * @brief Initiates the client session created using getSession().
-   * Sets up and establishes communication between the client and the QSH framework.
-   * The client should call this function only once per session.
-   *
-   * @param [in] str  encoded message string passed during session open.
-   *
-   * @return
-   *   -   0  Success.
-   *   -  -1  Failure.
-   */
   virtual int open(std::string str) = 0;
+
 protected:
 };
 

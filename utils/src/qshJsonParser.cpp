@@ -12,6 +12,11 @@
 
 #define MAX_DATA_VALUE_LEN 256
 
+#ifdef USE_GLIB
+#include <glib.h>
+#define strlcpy g_strlcpy
+#endif
+
 using namespace std;
 
 qshJsonParser::qshJsonParser():
