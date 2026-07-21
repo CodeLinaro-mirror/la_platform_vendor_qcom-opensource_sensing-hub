@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /** ============================================================================
  * @file
  *
@@ -10,9 +10,6 @@
  *
  * ===========================================================================*/
 
-/*==============================================================================
-  Include Files
-  ============================================================================*/
 #include <vector>
 #include "ISession.h"
 
@@ -50,19 +47,37 @@ public:
   ~sessionFactory(){};
 
   /**
-   * @brief Creates ISession instance for the specified sensing-hub ID
-   * @param [in] hub_id  Hub ID of the desired sensing-hub
-   *                     Default value = -1.
+   * @brief Creates ISession instance using the default sensing-hub ID (-1).
+   *
    * @return
    *   - Pointer to ISession object  Success.
    *   - Nullptr                     Failure.
-   *
    */
-  ISession* getSession(int hub_id = -1);
+  ISession* getSession();
 
   /**
-   * @brief Retrieve Hub IDs of the supported Sensing Hubs.
-   * @return vector containing all supported Hub IDs.
+   * @brief Creates ISession instance for the specified sensing-hub ID.
+   *
+   * @param [in] hub_id  Hub ID of the desired sensing-hub.
+   * @return
+   *   - Pointer to ISession object  Success.
+   *   - Nullptr                     Failure.
+   */
+  ISession* getSession(int hub_id );
+
+  /**
+   * @brief Creates ISession instance for the specified hub ID and direct channel flag.
+   *
+   * @param [in] hub_id           Hub ID.
+   * @param [in] direct_channel   bool to enable connection over direct channel
+   * @return
+   *   - Pointer to ISession object  Success.
+   *   - Nullptr                     Failure.
+   */
+  ISession* getSession(int hub_id, bool direct_channel);
+
+   /**
+   * @brief Retrieve the IDs of supported Sensing Hubs.
    *
    */
   std::vector<int> getSensingHubIds();
@@ -72,7 +87,7 @@ private:
    * @brief Pointer to ISession object.
    *
    */
-  typedef ISession* (*getSession_t)(int);
+  typedef ISession* (*getSession_t)(int, bool);
 
   /**
    * @brief Pointer to vector containing Sensing Hub IDs.
