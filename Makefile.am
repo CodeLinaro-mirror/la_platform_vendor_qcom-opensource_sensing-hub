@@ -2,6 +2,7 @@ ACLOCAL_AMFLAGS = -I m4
 
 dirs = apis/proto \
        session/1.0  \
+       utils \
        examples/SessionClient
 
 SUBDIRS = $(dirs)
