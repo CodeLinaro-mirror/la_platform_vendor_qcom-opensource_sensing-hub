@@ -19,6 +19,9 @@ extern "C" {
 #include <vector>
 #include <iostream>
 
+#define QSH_SESSION_MAX_REQUEST_PAYLOAD_SIZE 4096
+#define QSH_SESSION_MAX_EVENT_PAYLOAD_SIZE   4096
+
 namespace qshPb {
 
 /**

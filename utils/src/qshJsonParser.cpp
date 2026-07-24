@@ -271,9 +271,9 @@ void qshJsonParser::commitDrcConfig()
 
   mSensingHubDrcMap.insert({mSensingHubId, mDrcConfig});
 
-  sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d",
+  sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d link_name=%s",
            mSensingHubId, mDrcConfig.comm_type, mDrcConfig.channel_name.c_str(),
-           mDrcConfig.no_of_channels, mDrcConfig.service_id);
+           mDrcConfig.no_of_channels, mDrcConfig.service_id, mDrcConfig.link_name.c_str());
 }
 
 void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char * value)
@@ -316,6 +316,11 @@ void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char 
   {
     mDrcConfig.channel_name = value;
     sns_logd("updateSensingHubInfo: drc_channel_name=%s", mDrcConfig.channel_name.c_str());
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(grpName, ".direct_channel") && 0 == strcmp(key, "link_name"))
+  {
+    mDrcConfig.link_name = value;
+    sns_logd("updateSensingHubInfo: drc_link_name=%s", mDrcConfig.link_name.c_str());
   }
   else if(mIsClientCommGrp && 0 == strcmp(key, "no_of_channels") && mIsAppsLink)
   {
@@ -601,9 +606,9 @@ void qshJsonParser::printParserState()
   sns_logi("  drc map (%zu):", mSensingHubDrcMap.size());
   for (const auto& kv : mSensingHubDrcMap) {
     const comm_config& d = kv.second;
-    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d",
+    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d  link_name='%s'",
              kv.first, d.comm_type, d.channel_name.c_str(),
-             d.no_of_channels, d.service_id);
+             d.no_of_channels, d.service_id, d.link_name.c_str());
   }
   sns_logi("===========================");
 }
