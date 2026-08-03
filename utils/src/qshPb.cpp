@@ -236,17 +236,15 @@ namespace qshPb {
       event.payload.funcs.decode = &decode_payload;
       event.payload.arg = &data;
 
-      uint32_t msg_id = get_msg_id(*stream);
-      sns_logd("decode_suids: event msg_id=%d", msg_id);
-
-      if (msg_id != SNS_SUID_MSGID_SNS_SUID_EVENT) {
-        sns_loge("decode_suids: unexpected msg_id=%d", msg_id);
-        return true;
-      }
       if (!pb_decode(stream, sns_client_event_msg_sns_client_event_fields, &event)) {
         return false;
       }
 
+      if (event.msg_id == SNS_SUID_MSGID_SNS_SUID_DISCOVERY_DONE_EVENT) {
+        sns_logi("decode_suids: Received Discover Done event");
+        return true;
+      }
+      else if (event.msg_id == SNS_SUID_MSGID_SNS_SUID_EVENT) {
       pb_istream_t sub_stream = pb_istream_from_buffer(
           reinterpret_cast<const pb_byte_t*>(data.buf), data.buf_len);
       sns_suid_event suid_event = sns_suid_event_init_default;
@@ -280,6 +278,11 @@ namespace qshPb {
       }
       *(ctx->datatype) = datatype;
       return true;
+      }
+      else {
+        sns_loge("decode_suids: unexpected msg_id=%d", event.msg_id);
+        return false;
+      }
     }
 
     bool decode_attribute(pb_istream_t* stream, const pb_field_t* /*field*/, void** arg)
