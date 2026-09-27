@@ -4,10 +4,13 @@
  */
 
 #include "SessionFactory.h"
+#include "ISession.h"
+#include "SessionConfig.h"
 #include <dlfcn.h>
 
 using namespace std;
-using namespace com::quic::sensinghub::session::V1_0 ;
+using namespace com::quic::sensinghub::session::V1_0;
+
 #ifdef SNS_VERSIONED_LIB_ENABLED
 #define SENSING_HUB_INTERFACE_LIB_NAME "libQshSession.so.1"
 #else
@@ -16,49 +19,92 @@ using namespace com::quic::sensinghub::session::V1_0 ;
 
 bool sessionFactory::mSymbolLoaded = false;
 sessionFactory::getSession_t sessionFactory::mGetSessionSymbol = nullptr;
+sessionFactory::getSessionFromConfig_t sessionFactory::mgetSessionFromConfigSymbol = nullptr;
 sessionFactory::getSensingHubIds_t sessionFactory::mGetSensingHubIdsSymbol = nullptr;
 
 ISession* sessionFactory::getSession(int hub_id) {
-  int status = 0;
-  if(true != mSymbolLoaded) {
-    status = loadSymbol();
+  loadSymbol();
+  ISession *session = nullptr;
+  if (mSymbolLoaded && mGetSessionSymbol) {
+    session = mGetSessionSymbol(hub_id);
   }
-  if(0 == status) {
-    return mGetSessionSymbol(hub_id);
-  } else {
-    return nullptr;
-  }
+  return session;
+}
+
+ISession* sessionFactory::getSession() {
+  return getSession(-1);
 }
 
 vector<int> sessionFactory::getSensingHubIds() {
   vector<int> supportedHubIds;
-  int status = 0;
-  if(true != mSymbolLoaded) {
-    status = loadSymbol();
-  }
-  if(0 == status && nullptr != mGetSensingHubIdsSymbol) {
-    vector<int>* supportedHubIdsPtr =(vector<int>*)mGetSensingHubIdsSymbol();
-    for(int loop_idx = 0; loop_idx < supportedHubIdsPtr->size(); loop_idx++) {
-    supportedHubIds.push_back((*supportedHubIdsPtr)[loop_idx]);
+  loadSymbol();
+  if (mSymbolLoaded && mGetSensingHubIdsSymbol) {
+    vector<int>* supportedHubIdsPtr = (vector<int>*)mGetSensingHubIdsSymbol();
+    for (int loop_idx = 0; loop_idx < (int)supportedHubIdsPtr->size(); loop_idx++) {
+      supportedHubIds.push_back((*supportedHubIdsPtr)[loop_idx]);
     }
-    delete supportedHubIdsPtr;
   }
   return supportedHubIds;
 }
 
-int sessionFactory::loadSymbol() {
-  void* libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
-  if(nullptr != libHandler) {
+SessionConfig* sessionFactory::getSessionConfig() {
+  return new SessionConfig();
+}
+
+void sessionFactory::setDirectChannelRequest(SessionConfig *config,
+                                             const char *encodedRequest,
+                                             int requestLen) {
+  if (config) {
+    config->setDirectChannelRequest(encodedRequest, requestLen);
+  }
+}
+
+ISession *sessionFactory::getSession(int hub_id, const SessionConfig *config) {
+  loadSymbol();
+  ISession *session = nullptr;
+  string encodedConfig;
+  if (config) {
+    encodedConfig = config->encode(hub_id);
+  }
+  if (mSymbolLoaded && mgetSessionFromConfigSymbol) {
+    session = mgetSessionFromConfigSymbol(encodedConfig.data(),
+                                          (int)encodedConfig.size());
+  }
+  return session;
+}
+
+bool sessionFactory::loadSymbol() {
+  if (mSymbolLoaded) {
+    return true;
+  }
+  void *libHandler = dlopen(SENSING_HUB_INTERFACE_LIB_NAME, RTLD_NOW);
+  if (nullptr != libHandler) {
     mGetSessionSymbol = (getSession_t)dlsym(libHandler, "getSession");
-    mGetSensingHubIdsSymbol = (getSensingHubIds_t)dlsym(libHandler, "getSensingHubIds");
-    if(nullptr != mGetSessionSymbol && nullptr != mGetSensingHubIdsSymbol) {
-      mSymbolLoaded = true;
-      return 0;
-    } else {
-      printf("error in loading the symbols \n");
-      return -1;
+    if (!mGetSessionSymbol) {
+      printf("error in loading getSession symbol: %s\n", dlerror());
+    }
+    mgetSessionFromConfigSymbol =
+        (getSessionFromConfig_t)dlsym(libHandler, "getSessionFromConfig");
+    if (!mgetSessionFromConfigSymbol) {
+      printf("error in loading getSessionFromConfig symbol: %s\n", dlerror());
+    }
+    mGetSensingHubIdsSymbol =
+        (getSensingHubIds_t)dlsym(libHandler, "getSensingHubIds");
+    if (!mGetSensingHubIdsSymbol) {
+      printf("error in loading getSensingHubIds symbol %s\n", dlerror());
     }
   }
-  printf("error in loading the lib \n");
-  return -1;
+  mSymbolLoaded = (mGetSessionSymbol && mGetSensingHubIdsSymbol &&
+                   mgetSessionFromConfigSymbol);
+
+  return mSymbolLoaded;
+}
+
+ISession *sessionFactory::getSession(int hub_id, bool direct_channel) {
+  // For compatibility, remove this once client adopts sessionConfig.
+  if(direct_channel){
+  SessionConfig config;
+  return getSession(hub_id,&config);
+  }
+  return getSession(hub_id);
 }

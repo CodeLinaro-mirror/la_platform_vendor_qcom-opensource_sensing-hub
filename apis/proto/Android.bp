@@ -73,7 +73,8 @@ cc_library_shared {
         "sns_rotv.proto",
         "sns_sig_motion.proto",
         "sns_tilt.proto",
-        "sns_transport_ppe.proto"
+        "sns_transport_ppe.proto",
+        "sns_client_ipc.proto",
     ],
     local_include_dirs: ["./"],
     cppflags: ["-DGOOGLE_PROTOBUF_NO_RTTI"],
@@ -148,7 +149,8 @@ filegroup {
         "sns_rotv.proto",
         "sns_sig_motion.proto",
         "sns_tilt.proto",
-        "sns_transport_ppe.proto"
+        "sns_transport_ppe.proto",
+        "sns_client_ipc.proto",
     ],
 }
 
@@ -192,7 +194,8 @@ genrule_defaults {
         "sns_rotv.proto",
         "sns_sig_motion.proto",
         "sns_tilt.proto",
-        "sns_transport_ppe.proto"
+        "sns_transport_ppe.proto",
+        "sns_client_ipc.proto",
     ],
     tools: [
         "aprotoc",
@@ -263,6 +266,7 @@ genrule {
         "sns_sig_motion.pb.h",
         "sns_tilt.pb.h",
         "sns_transport_ppe.pb.h",
+        "sns_client_ipc.pb.h",
     ],
     export_include_dirs: [
         "google/protobuf",
@@ -314,12 +318,12 @@ genrule {
         "sns_sig_motion.pb.c",
         "sns_tilt.pb.c",
         "sns_transport_ppe.pb.c",
+        "sns_client_ipc.pb.c",
     ],
     export_include_dirs: [
         "google/protobuf"
     ],
 }
-
 prebuilt_etc {
     name: "descriptor.proto",
     src: "google/protobuf/descriptor.proto",
@@ -330,6 +334,13 @@ prebuilt_etc {
 prebuilt_etc {
     name: "nanopb.proto",
     src: "nanopb.proto",
+    sub_dir: "sensors/proto",
+    vendor: true,
+    owner: "qti",
+}
+prebuilt_etc {
+    name: "sns_client_ipc.proto",
+    src: "sns_client_ipc.proto",
     sub_dir: "sensors/proto",
     vendor: true,
     owner: "qti",

@@ -8,16 +8,26 @@
 #include <vector>
 #include <string>
 
+#define COMM_TYPE_QMI     0
+#define COMM_TYPE_GLINK   1
+#define COMM_TYPE_FASTRPC 2
+
+struct comm_config
+{
+  int comm_type;          // COMM_TYPE_QMI / COMM_TYPE_GLINK / COMM_TYPE_FASTRPC; -1 if not set
+  std::string channel_name;  // GLINK channel name or FastRPC URI; empty if unused
+  int no_of_channels;        // number of GLINK channels; 0 if unused
+  int service_id;            // QMI service id; 0 if unused
+
+  comm_config() : comm_type(-1), no_of_channels(0), service_id(0) {}
+};
+
 class qshJsonParser
 {
 public:
   qshJsonParser();
   ~qshJsonParser(){};
 
-  /**
-   * @brief get handle to qshJsonParser get_instance
-   * @return parser_instance&
-   */
   static qshJsonParser& getInstance()
   {
       static qshJsonParser parserInstance;
@@ -30,14 +40,15 @@ public:
   std::vector<int> getHubIdList();
   /* gets the hub id for a given hub name */
   int getHubId(std::string hubName);
-  /* fetches the comm attributes for a hub id */
-  int getCommHandleAttrs(int hubID);
-  /* fetches the comm type for a hub id */
-  int getCommType(int hubID);
   /* fetches the hub name for a hub id */
   std::string getHubName(int hubID);
   /* returns if parser state has been updated from config file */
   bool isFileParsed();
+  /* fetches the client comm configuration for a hub id */
+  comm_config getClientCommConfig(int hubID);
+  /* fetches the direct channel configuration for a hub id */
+  comm_config getDrcConfig(int hubID);
+  void printParserState();
 
 private:
   int mDeviceSocId;
@@ -47,37 +58,34 @@ private:
   void resetParserState();
 
   std::unordered_map<std::string, int> mSensingHubNameIdMap;
-  std::unordered_map<int, std::pair<std::string, int>> mSensingHubCommMap;
   std::unordered_map<int, std::string> mSensingHubIdNameMap;
+  std::unordered_map<int, comm_config> mSensingHubClientCommMap;
+  std::unordered_map<int, comm_config> mSensingHubDrcMap;
+
   int mCurrLineNum;
   std::vector<int> mHubIds;
 
   bool mReadCommAttr;
+  bool mIsDrcConfigGrp;
   bool mIsClientCommGrp;
+  bool mIsAppsLink;
 
   int mSensingHubId;
   std::string mPlatformId;
-  std::string mClientCommType;
-  int mClientCommValue;
 
-  bool mSensingHubNameIdMapFilled;
-  bool mCommMapFilled;
+  comm_config mClientCommConfig;
+  comm_config mDrcConfig;
+
   bool mIsFileParsed;
 
   int getWhitespaceLen(char const* str, uint32_t strLen);
-
-  uint32_t parsePair(char* json, uint32_t jsonLen, char** key,
-                                                      char** value);
-
+  uint32_t parsePair(char* json, uint32_t jsonLen, char** key, char** value);
   uint32_t parseItem(char* itemName, char* itemValue, char* json, uint32_t jsonLen);
-
   void updateSensingHubInfo(const char* grpName, char* key, char* value);
-
-  int parseGroup(char const* grpName, char* json,
-                          uint32_t jsonLen, uint32_t* len);
-
+  int parseGroup(char const* grpName, char* json, uint32_t jsonLen, uint32_t* len);
   int32_t parseConfig(char* json, uint32_t jsonLen);
-
   int parseConfigItem(char* json, uint32_t jsonLen);
   int parseFile(char* json, uint32_t jsonLen);
+  void commitClientCommConfig();
+  void commitDrcConfig();
 };

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 /** ============================================================================
  * @file
  *
@@ -6,7 +6,8 @@
  * (1) Facilitate interaction with Qualcomm Sensing Hub
  * (2) Abstracts the underlying transport layer mechanism
  *
- * @copyright Copyright (c) 2024-2025 Qualcomm Innovation Center, Inc. All rights reserved.
+ * @copyright 
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  *
  * ===========================================================================*/
@@ -125,6 +126,9 @@ public:
    *
    */
   virtual ~ISession(){};
+
+  virtual int open(std::string str) = 0;
+
 protected:
 };
 
