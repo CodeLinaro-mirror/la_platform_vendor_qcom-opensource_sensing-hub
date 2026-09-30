@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #include <sys/stat.h>
+#include <algorithm>
 #include <cstring>
 #include <cstdint>
 #include <sstream>
@@ -12,6 +13,12 @@
 
 #define MAX_DATA_VALUE_LEN 256
 
+/* Combine 4 consecutive bytes of a big-endian buffer into a uint32_t,
+ * e.g. a raw device-tree <u32> cell read via fread() into a uint8_t[4]. */
+#define BE32_FROM_BYTES(b) \
+  (((uint32_t)(b)[0] << 24) | ((uint32_t)(b)[1] << 16) | \
+   ((uint32_t)(b)[2] << 8)  |  (uint32_t)(b)[3])
+
 #ifdef USE_GLIB
 #include <glib.h>
 #define strlcpy g_strlcpy
@@ -19,9 +26,11 @@
 
 using namespace std;
 
+const char* socPath = "/sys/devices/soc0/soc_id";
+const char* softskuPath = "/proc/device-tree/qcom,softsku-id";
+
 qshJsonParser::qshJsonParser():
-  mDeviceSocId(-1),
-  mJsonSocId(-1),
+  mDeviceConfigMismatch(false),
   mReadCommAttr(false),
   mIsDrcConfigGrp(false),
   mIsClientCommGrp(false),
@@ -30,9 +39,11 @@ qshJsonParser::qshJsonParser():
   mPlatformId(""),
   mIsFileParsed(false)
 {
-  mDeviceSocId = readSocId();
-  mJsonSocIdList.clear();
-  sns_logi("Device soc_id detected = %d", mDeviceSocId);
+  mDeviceConfigs["soc_id"] = readSocId();
+  sns_logi("Device soc_id detected = %d", mDeviceConfigs["soc_id"]);
+
+  mDeviceConfigs["sku_id"] = readSoftSkuId();
+  sns_logi("Device sku_id detected = %d", mDeviceConfigs["sku_id"]);
 }
 
 string qshJsonParser::getHubName(int hubID)
@@ -46,7 +57,6 @@ string qshJsonParser::getHubName(int hubID)
 
 int qshJsonParser::readSocId()
 {
-  const char* socPath = "/sys/devices/soc0/soc_id";
   FILE* fp = fopen(socPath, "r");
   if (!fp)
   {
@@ -66,6 +76,29 @@ int qshJsonParser::readSocId()
   return atoi(buf);
 }
 
+int qshJsonParser::readSoftSkuId()
+{
+  FILE* fp = fopen(softskuPath, "rb");
+  if (!fp)
+  {
+    sns_logd("Failed to open soft_sku_id file: %s", softskuPath);
+    return -1;
+  }
+
+  uint8_t buf[4] = {0};
+  size_t bytesRead = fread(buf, sizeof(buf[0]), sizeof(buf), fp);
+  fclose(fp);
+
+  if (sizeof(buf) != bytesRead)
+  {
+    sns_loge("Failed to read soft_sku_id, bytes read: %zu", bytesRead);
+    return -1;
+  }
+
+  /* qcom,softsku-id is a raw device-tree <u32> cell, stored big-endian */
+  return BE32_FROM_BYTES(buf);
+}
+
 void qshJsonParser::resetParserState()
 {
   mSensingHubId = -1;
@@ -79,8 +112,8 @@ void qshJsonParser::resetParserState()
   mIsAppsLink = false;
 
   mCurrLineNum = 0;
-  mJsonSocId = -1;
-  mJsonSocIdList.clear();
+  mJsonConfigs.clear();
+  mDeviceConfigMismatch = false;
   mHubIds.clear();
 }
 
@@ -457,14 +490,15 @@ int qshJsonParser::parseConfigItem(char* json, uint32_t jsonLen)
 
         cidx += len;
 
-        if (strcmp(key, "soc_id") == 0 && value != NULL) {
-            sns_logi("config: found list soc_id=%s", value);
+        auto fieldIt = mDeviceConfigs.find(key);
+        if (fieldIt != mDeviceConfigs.end() && value != NULL) {
+            sns_logi("config: found list %s=%s", key, value);
 
             std::stringstream ss(value);
 
             std::string token;
             while (std::getline(ss, token, ',')) {
-                mJsonSocIdList.push_back(std::stoi(token));
+                mJsonConfigs[key].push_back(std::stoi(token));
             }
         }
 
@@ -529,27 +563,28 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
     if(0 == strcmp(key, "config"))
     {
       ret = parseConfig(&json[cidx], jsonlen - cidx);
-      if(0 == ret) {
+      if(0 > ret) {
         sns_loge("Error: parsing config failed");
         return -1;
       }
       cidx += ret;
 
-      if(mJsonSocIdList.size() < 1){
-        sns_logi("json soc_id does not exist, continue to parse the rest of json");
-      } else {
-        for(int socId: mJsonSocIdList){
-          if(socId == mDeviceSocId){
-            mJsonSocId = socId;
-            sns_logi("soc_id=%d match target soc_id=%d",
-                    mJsonSocId, mDeviceSocId);
-            break;
-          }
+      for (const auto& entry : mJsonConfigs) {
+        const std::string& field = entry.first;
+        const std::vector<int>& idList = entry.second;
+        if (idList.empty()) {
+          continue;
         }
-        if(mJsonSocId == -1){
-          sns_logi("Skipping JSON: soc_id=%d does not match target soc_id=%d",
-            mJsonSocId, mDeviceSocId);
-          return 0;
+
+        int deviceConfigValue = mDeviceConfigs[field];
+        bool matched = std::find(idList.begin(), idList.end(), deviceConfigValue) != idList.end();
+
+        if (matched) {
+          sns_logd("%s=%d match target %s=%d", field.c_str(), deviceConfigValue, field.c_str(), deviceConfigValue);
+        } else {
+          sns_logi("Skipping JSON: %s does not match target %s=%d", field.c_str(), field.c_str(), deviceConfigValue);
+          mDeviceConfigMismatch = true;
+          return -1;
         }
       }
     }
@@ -580,8 +615,8 @@ void qshJsonParser::printParserState()
   }
 
   sns_logi("=== qshJsonParser state ===");
-  sns_logi("  device_soc_id : %d", mDeviceSocId);
-  sns_logi("  json_soc_id   : %d", mJsonSocId);
+  for (const auto& kv : mDeviceConfigs)
+    sns_logi("  device_%s : %d", kv.first.c_str(), kv.second);
 
   sns_logi("  hub_ids (%zu):", mHubIds.size());
   for (int id : mHubIds)
@@ -648,12 +683,17 @@ int qshJsonParser::loadFile(const char* path)
   fileContent[buf.st_size] = '\0';
   fclose(fptr);
   sns_logi("parsing the contents of the file %s",path);
-  if(0 != parseFile(fileContent, buf.st_size))
+
+  int ret = parseFile(fileContent, buf.st_size);
+  free(fileContent);
+
+  /* a device-config mismatch is a deliberate skip, not a parse error --
+   * the file is still a valid, structurally-parsed config for this device */
+  if (0 != ret && !mDeviceConfigMismatch)
   {
-    free(fileContent);
     return -1;
   }
-  free(fileContent);
+
   mIsFileParsed = true;
   printParserState();
   return 0;
