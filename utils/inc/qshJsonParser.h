@@ -8,16 +8,13 @@
 #include <vector>
 #include <string>
 
-#define COMM_TYPE_QMI     0
-#define COMM_TYPE_GLINK   1
-#define COMM_TYPE_FASTRPC 2
-
 struct comm_config
 {
   int comm_type;          // COMM_TYPE_QMI / COMM_TYPE_GLINK / COMM_TYPE_FASTRPC; -1 if not set
   std::string channel_name;  // GLINK channel name or FastRPC URI; empty if unused
   int no_of_channels;        // number of GLINK channels; 0 if unused
   int service_id;            // QMI service id; 0 if unused
+  std::string link_name;     // transport link (e.g. "lmcu"/"adsp"); empty if unused
 
   comm_config() : comm_type(-1), no_of_channels(0), service_id(0) {}
 };
@@ -55,6 +52,9 @@ private:
   std::unordered_map<std::string, int> mDeviceConfigs;
   /* field name -> list of ids accepted for that field, as declared in the config currently being parsed */
   std::unordered_map<std::string, std::vector<int>> mJsonConfigs;
+  /* set when the config's device-config filter (soc_id/sku_id) doesn't match this device,
+   * so loadFile() can tell that apart from a genuine parse error */
+  bool mDeviceConfigMismatch;
   int readSocId();
   int readSoftSkuId();
   void resetParserState();

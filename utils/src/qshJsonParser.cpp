@@ -13,6 +13,12 @@
 
 #define MAX_DATA_VALUE_LEN 256
 
+/* Combine 4 consecutive bytes of a big-endian buffer into a uint32_t,
+ * e.g. a raw device-tree <u32> cell read via fread() into a uint8_t[4]. */
+#define BE32_FROM_BYTES(b) \
+  (((uint32_t)(b)[0] << 24) | ((uint32_t)(b)[1] << 16) | \
+   ((uint32_t)(b)[2] << 8)  |  (uint32_t)(b)[3])
+
 #ifdef USE_GLIB
 #include <glib.h>
 #define strlcpy g_strlcpy
@@ -30,6 +36,7 @@ const char* socPath = "/sys/devices/soc0/soc_id";
 const char* softskuPath = "/proc/device-tree/qcom,softsku-id";
 
 qshJsonParser::qshJsonParser():
+  mDeviceConfigMismatch(false),
   mReadCommAttr(false),
   mIsDrcConfigGrp(false),
   mIsClientCommGrp(false),
@@ -113,6 +120,7 @@ void qshJsonParser::resetParserState()
 
   mCurrLineNum = 0;
   mJsonConfigs.clear();
+  mDeviceConfigMismatch = false;
   mHubIds.clear();
   mDeviceConfigMismatch = false;
 }
@@ -304,9 +312,9 @@ void qshJsonParser::commitDrcConfig()
 
   mSensingHubDrcMap.insert({mSensingHubId, mDrcConfig});
 
-  sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d",
+  sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d link_name=%s",
            mSensingHubId, mDrcConfig.comm_type, mDrcConfig.channel_name.c_str(),
-           mDrcConfig.no_of_channels, mDrcConfig.service_id);
+           mDrcConfig.no_of_channels, mDrcConfig.service_id, mDrcConfig.link_name.c_str());
 }
 
 void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char * value)
@@ -349,6 +357,11 @@ void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char 
   {
     mDrcConfig.channel_name = value;
     sns_logd("updateSensingHubInfo: drc_channel_name=%s", mDrcConfig.channel_name.c_str());
+  }
+  else if(mIsDrcConfigGrp && 0 == strcmp(grpName, ".direct_channel") && 0 == strcmp(key, "link_name"))
+  {
+    mDrcConfig.link_name = value;
+    sns_logd("updateSensingHubInfo: drc_link_name=%s", mDrcConfig.link_name.c_str());
   }
   else if(mIsClientCommGrp && 0 == strcmp(key, "no_of_channels") && mIsAppsLink)
   {
@@ -577,8 +590,6 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
         if (matched) {
           sns_logd("%s=%d match target %s=%d", field.c_str(), deviceConfigValue, field.c_str(), deviceConfigValue);
         } else {
-          /* File is valid JSON, it just doesn't target this device -- this is
-           * not a parse error, so loadFile() must not treat it as one. */
           sns_logi("Skipping JSON: %s does not match target %s=%d", field.c_str(), field.c_str(), deviceConfigValue);
           mDeviceConfigMismatch = true;
           return -1;
@@ -638,9 +649,9 @@ void qshJsonParser::printParserState()
   sns_logi("  drc map (%zu):", mSensingHubDrcMap.size());
   for (const auto& kv : mSensingHubDrcMap) {
     const comm_config& d = kv.second;
-    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d",
+    sns_logi("    hub_id=%d  comm_type=%d  channel='%s'  channels=%d  service_id=%d  link_name='%s'",
              kv.first, d.comm_type, d.channel_name.c_str(),
-             d.no_of_channels, d.service_id);
+             d.no_of_channels, d.service_id, d.link_name.c_str());
   }
   sns_logi("===========================");
 }
@@ -680,19 +691,17 @@ int qshJsonParser::loadFile(const char* path)
   fileContent[buf.st_size] = '\0';
   fclose(fptr);
   sns_logi("parsing the contents of the file %s",path);
+
   int ret = parseFile(fileContent, buf.st_size);
   free(fileContent);
-  if(0 != ret)
+
+  /* a device-config mismatch is a deliberate skip, not a parse error --
+   * the file is still a valid, structurally-parsed config for this device */
+  if (0 != ret && !mDeviceConfigMismatch)
   {
-    if(mDeviceConfigMismatch)
-    {
-      /* File is valid JSON, it just doesn't target this device -- a real
-       * config does exist, so callers must not treat this as "no config
-       * file present" and fall back to legacy defaults. */
-      mIsFileParsed = true;
-    }
     return -1;
   }
+
   mIsFileParsed = true;
   printParserState();
   return 0;
