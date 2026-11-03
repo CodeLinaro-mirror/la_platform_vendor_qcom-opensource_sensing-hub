@@ -7,34 +7,21 @@
 #include <cstring>
 #include <cstdint>
 #include <sstream>
-
 #include "qshJsonParser.h"
 #include "qshLog.h"
-
 #define MAX_DATA_VALUE_LEN 256
-
 /* Combine 4 consecutive bytes of a big-endian buffer into a uint32_t,
  * e.g. a raw device-tree <u32> cell read via fread() into a uint8_t[4]. */
 #define BE32_FROM_BYTES(b) \
   (((uint32_t)(b)[0] << 24) | ((uint32_t)(b)[1] << 16) | \
    ((uint32_t)(b)[2] << 8)  |  (uint32_t)(b)[3])
-
 #ifdef USE_GLIB
 #include <glib.h>
 #define strlcpy g_strlcpy
 #endif
-
-/* Combine 4 consecutive bytes of a big-endian buffer into a uint32_t,
- * e.g. a raw device-tree <u32> cell read via fread() into a uint8_t[4]. */
-#define BE32_FROM_BYTES(b) \
-  (((uint32_t)(b)[0] << 24) | ((uint32_t)(b)[1] << 16) | \
-   ((uint32_t)(b)[2] << 8)  |  (uint32_t)(b)[3])
-
 using namespace std;
-
 const char* socPath = "/sys/devices/soc0/soc_id";
 const char* softskuPath = "/proc/device-tree/qcom,softsku-id";
-
 qshJsonParser::qshJsonParser():
   mDeviceConfigMismatch(false),
   mReadCommAttr(false),
@@ -43,16 +30,13 @@ qshJsonParser::qshJsonParser():
   mIsAppsLink(false),
   mSensingHubId(-1),
   mPlatformId(""),
-  mIsFileParsed(false),
-  mDeviceConfigMismatch(false)
+  mIsFileParsed(false)
 {
   mDeviceConfigs["soc_id"] = readSocId();
   sns_logi("Device soc_id detected = %d", mDeviceConfigs["soc_id"]);
-
   mDeviceConfigs["sku_id"] = readSoftSkuId();
   sns_logi("Device sku_id detected = %d", mDeviceConfigs["sku_id"]);
 }
-
 string qshJsonParser::getHubName(int hubID)
 {
   if(mSensingHubIdNameMap.count(hubID) == 0) {
@@ -61,7 +45,6 @@ string qshJsonParser::getHubName(int hubID)
   }
   return mSensingHubIdNameMap[hubID];
 }
-
 int qshJsonParser::readSocId()
 {
   FILE* fp = fopen(socPath, "r");
@@ -70,7 +53,6 @@ int qshJsonParser::readSocId()
     sns_loge("Failed to open soc_id file: %s", socPath);
     return -1;
   }
-
   char buf[16] = {0};
   if (!fgets(buf, sizeof(buf), fp))
   {
@@ -78,11 +60,9 @@ int qshJsonParser::readSocId()
     fclose(fp);
     return -1;
   }
-
   fclose(fp);
   return atoi(buf);
 }
-
 int qshJsonParser::readSoftSkuId()
 {
   FILE* fp = fopen(softskuPath, "rb");
@@ -91,40 +71,32 @@ int qshJsonParser::readSoftSkuId()
     sns_logd("Failed to open soft_sku_id file: %s", softskuPath);
     return -1;
   }
-
   uint8_t buf[4] = {0};
   size_t bytesRead = fread(buf, sizeof(buf[0]), sizeof(buf), fp);
   fclose(fp);
-
   if (sizeof(buf) != bytesRead)
   {
     sns_loge("Failed to read soft_sku_id, bytes read: %zu", bytesRead);
     return -1;
   }
-
   /* qcom,softsku-id is a raw device-tree <u32> cell, stored big-endian */
   return BE32_FROM_BYTES(buf);
 }
-
 void qshJsonParser::resetParserState()
 {
   mSensingHubId = -1;
   mPlatformId.clear();
   mClientCommConfig = comm_config();
   mDrcConfig = comm_config();
-
   mReadCommAttr = false;
   mIsClientCommGrp = false;
   mIsDrcConfigGrp = false;
   mIsAppsLink = false;
-
   mCurrLineNum = 0;
   mJsonConfigs.clear();
   mDeviceConfigMismatch = false;
   mHubIds.clear();
-  mDeviceConfigMismatch = false;
 }
-
 comm_config qshJsonParser::getClientCommConfig(int hubID)
 {
   if(0 == mSensingHubClientCommMap.count(hubID))
@@ -134,7 +106,6 @@ comm_config qshJsonParser::getClientCommConfig(int hubID)
   }
   return mSensingHubClientCommMap.at(hubID);
 }
-
 comm_config qshJsonParser::getDrcConfig(int hubID)
 {
   if(0 == mSensingHubDrcMap.count(hubID))
@@ -144,19 +115,16 @@ comm_config qshJsonParser::getDrcConfig(int hubID)
   }
   return mSensingHubDrcMap.at(hubID);
 }
-
 std::vector<int> qshJsonParser::getHubIdList()
 {
   return mHubIds;
 }
-
 int qshJsonParser::getHubId(std::string hubName)
 {
   if(0 == mSensingHubNameIdMap.count(hubName))
     return -1;
   return mSensingHubNameIdMap.at(hubName);
 }
-
 int qshJsonParser::getWhitespaceLen(char const* str, uint32_t strLen)
 {
   uint32_t cidx = 0;
@@ -174,16 +142,13 @@ int qshJsonParser::getWhitespaceLen(char const* str, uint32_t strLen)
   }
   return cidx;
 }
-
 uint32_t qshJsonParser::parsePair(char* json, uint32_t jsonlen, char** key,
                            char** value)
 {
   uint32_t cidx = 0;
   char* endString;
   bool failed = false;
-
   *value = NULL;
-
   if(cidx >= jsonlen || '\"' != json[cidx++])
   {
     sns_logd("parsePair: Missing opening quote line no.: %d ", mCurrLineNum);
@@ -244,11 +209,9 @@ uint32_t qshJsonParser::parsePair(char* json, uint32_t jsonlen, char** key,
   }
   return failed ? 0 : cidx;
 }
-
 uint32_t qshJsonParser::parseItem(char* itemName, char* itemValue, char* json, uint32_t jsonlen)
 {
   uint32_t cidx = 0;
-
   if(cidx >= jsonlen || '{' != json[cidx++])
   {
     sns_logd("parseItem: Missing opening bracket Line no. %d ", mCurrLineNum);
@@ -259,11 +222,9 @@ uint32_t qshJsonParser::parseItem(char* itemName, char* itemValue, char* json, u
     {
       char* key, *value;
       uint32_t len;
-
       cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
       len = parsePair(&json[cidx], jsonlen - cidx, &key, &value);
       cidx += len;
-
       if(0 == len || NULL == key || NULL == value)
       {
         sns_logd("parseItem: Unable to parse pair Line no. %d ", mCurrLineNum);
@@ -283,7 +244,6 @@ uint32_t qshJsonParser::parseItem(char* itemName, char* itemValue, char* json, u
       }
       cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
     } while(cidx < jsonlen && ',' == json[cidx] && cidx++);
-
     if(cidx >= jsonlen || '}' != json[cidx++])
     {
       sns_logd("parseItem: Missing closing bracket Line no.  %d ", mCurrLineNum);
@@ -292,39 +252,30 @@ uint32_t qshJsonParser::parseItem(char* itemName, char* itemValue, char* json, u
   }
   return cidx;
 }
-
 void qshJsonParser::commitClientCommConfig()
 {
   if((-1 == mSensingHubId) || (mClientCommConfig.comm_type == -1))
     return;
-
   mSensingHubClientCommMap.insert({mSensingHubId, mClientCommConfig});
-
   sns_logi("commitClientCommConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d",
            mSensingHubId, mClientCommConfig.comm_type, mClientCommConfig.channel_name.c_str(),
            mClientCommConfig.no_of_channels, mClientCommConfig.service_id);
 }
-
 void qshJsonParser::commitDrcConfig()
 {
   if((-1 == mSensingHubId) || (mDrcConfig.comm_type == -1))
     return;
-
   mSensingHubDrcMap.insert({mSensingHubId, mDrcConfig});
-
   sns_logi("commitDrcConfig: hub_id=%d type=%d channel=%s channels=%d service_id=%d link_name=%s",
            mSensingHubId, mDrcConfig.comm_type, mDrcConfig.channel_name.c_str(),
            mDrcConfig.no_of_channels, mDrcConfig.service_id, mDrcConfig.link_name.c_str());
 }
-
 void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char * value)
 {
   if(0 == strcmp(grpName, ".client_comm"))
     mIsClientCommGrp = true;
-
   if(0 == strcmp(grpName, ".direct_channel"))
     mIsDrcConfigGrp = true;
-
   if(0 == strcmp(key, "platform_id"))
   {
     mPlatformId = value;
@@ -394,14 +345,11 @@ void qshJsonParser::updateSensingHubInfo(const char * grpName, char * key, char 
     mIsAppsLink = true;
   }
 }
-
 int qshJsonParser::parseGroup(char const* grpName, char* json,
                             uint32_t jsonlen, uint32_t* len)
 {
   uint32_t cidx = 0;
-
   *len = 0;
-
   if(cidx >= jsonlen || '{' != json[cidx++])
   {
     sns_loge("parseGroup: Missing opening bracket Line no. %d ", mCurrLineNum);
@@ -412,11 +360,9 @@ int qshJsonParser::parseGroup(char const* grpName, char* json,
     {
       char *key, *value;
       uint32_t len;
-
       cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
       len = parsePair(&json[cidx], jsonlen - cidx, &key, &value);
       cidx += len;
-
       if(0 == len || NULL == key)
       {
         sns_loge("%s: Unable to parse pair on line No %d ", __func__, mCurrLineNum);
@@ -469,7 +415,6 @@ int qshJsonParser::parseGroup(char const* grpName, char* json,
       }
       cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
     } while(',' == json[cidx] && cidx++);
-
     if(cidx >= jsonlen || '}' != json[cidx++])
     {
       sns_loge("parseGroup: Missing closing bracket Line No. %d ", mCurrLineNum);
@@ -479,76 +424,57 @@ int qshJsonParser::parseGroup(char const* grpName, char* json,
   *len = cidx;
   return 0;
 }
-
 int qshJsonParser::parseConfigItem(char* json, uint32_t jsonLen)
 {
     uint32_t cidx = 0;
     char *key, *value;
     uint32_t len;
-
     if (json[cidx++] != '{')
         return 0;
-
     while (cidx < jsonLen) {
         cidx += getWhitespaceLen(&json[cidx], jsonLen - cidx);
-
         len = parsePair(&json[cidx], jsonLen - cidx, &key, &value);
         if (len == 0 || key == NULL)
             break;
-
         cidx += len;
-
         auto fieldIt = mDeviceConfigs.find(key);
         if (fieldIt != mDeviceConfigs.end() && value != NULL) {
             sns_logi("config: found list %s=%s", key, value);
-
             std::stringstream ss(value);
-
             std::string token;
             while (std::getline(ss, token, ',')) {
                 mJsonConfigs[key].push_back(std::stoi(token));
             }
         }
-
         cidx += getWhitespaceLen(&json[cidx], jsonLen - cidx);
         if (json[cidx] != ',')
             break;
-
         cidx++;
     }
-
     return cidx;
 }
-
 int32_t qshJsonParser::parseConfig(char* json, uint32_t jsonlen)
 {
     int32_t cidx = 0;
-
     cidx += getWhitespaceLen(json, jsonlen);
-
     if (json[cidx] != '{') {
         sns_loge("parse_config: Missing open bracket");
         return -1;
     }
-
     cidx += parseConfigItem(&json[cidx], jsonlen - cidx);
-
     cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
     if (json[cidx++] != '}') {
         sns_loge("parse_config: Missing closing bracket");
         return -1;
     }
-
     return cidx;
 }
-
 int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
 {
   uint32_t cidx = 0;
   uint32_t len;
   int32_t ret;
   char *key, *value;
-
   mCurrLineNum = 0;
   sns_logi("%s: started parsing sensing hub info json file", __func__);
   cidx = getWhitespaceLen(json, jsonlen);
@@ -557,11 +483,9 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
     sns_loge("Missing open bracket in config file");
     return -1;
   }
-
   do {
     cidx += getWhitespaceLen(&json[cidx], jsonlen - cidx);
     len = parsePair(&json[cidx], jsonlen - cidx, &key, &value);
-
     if(0 == len || NULL == key || NULL != value)
     {
         sns_loge("Pair parsing failed");
@@ -576,17 +500,14 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
         return -1;
       }
       cidx += ret;
-
       for (const auto& entry : mJsonConfigs) {
         const std::string& field = entry.first;
         const std::vector<int>& idList = entry.second;
         if (idList.empty()) {
           continue;
         }
-
         int deviceConfigValue = mDeviceConfigs[field];
         bool matched = std::find(idList.begin(), idList.end(), deviceConfigValue) != idList.end();
-
         if (matched) {
           sns_logd("%s=%d match target %s=%d", field.c_str(), deviceConfigValue, field.c_str(), deviceConfigValue);
         } else {
@@ -610,34 +531,27 @@ int qshJsonParser::parseFile(char* json, uint32_t jsonlen)
   sns_logi("Parsing Complete");
   return 0;
 }
-
 bool qshJsonParser::isFileParsed(){
   return mIsFileParsed;
 }
-
 void qshJsonParser::printParserState()
 {
   if (!mIsFileParsed) {
     sns_logi("printParserState: file not yet parsed");
     return;
   }
-
   sns_logi("=== qshJsonParser state ===");
   for (const auto& kv : mDeviceConfigs)
     sns_logi("  device_%s : %d", kv.first.c_str(), kv.second);
-
   sns_logi("  hub_ids (%zu):", mHubIds.size());
   for (int id : mHubIds)
     sns_logi("    [%d]", id);
-
   sns_logi("  name->id map (%zu):", mSensingHubNameIdMap.size());
   for (const auto& kv : mSensingHubNameIdMap)
     sns_logi("    '%s' -> %d", kv.first.c_str(), kv.second);
-
   sns_logi("  id->name map (%zu):", mSensingHubIdNameMap.size());
   for (const auto& kv : mSensingHubIdNameMap)
     sns_logi("    %d -> '%s'", kv.first, kv.second.c_str());
-
   sns_logi("  client comm map (%zu):", mSensingHubClientCommMap.size());
   for (const auto& kv : mSensingHubClientCommMap) {
     const comm_config& c = kv.second;
@@ -645,7 +559,6 @@ void qshJsonParser::printParserState()
              kv.first, c.comm_type, c.channel_name.c_str(),
              c.no_of_channels, c.service_id);
   }
-
   sns_logi("  drc map (%zu):", mSensingHubDrcMap.size());
   for (const auto& kv : mSensingHubDrcMap) {
     const comm_config& d = kv.second;
@@ -655,12 +568,10 @@ void qshJsonParser::printParserState()
   }
   sns_logi("===========================");
 }
-
 /* call this function to start parsing */
 int qshJsonParser::loadFile(const char* path)
 {
   resetParserState();
-
   struct stat buf;
   if(0 != stat(path, &buf))
   {
@@ -691,17 +602,14 @@ int qshJsonParser::loadFile(const char* path)
   fileContent[buf.st_size] = '\0';
   fclose(fptr);
   sns_logi("parsing the contents of the file %s",path);
-
   int ret = parseFile(fileContent, buf.st_size);
   free(fileContent);
-
   /* a device-config mismatch is a deliberate skip, not a parse error --
    * the file is still a valid, structurally-parsed config for this device */
   if (0 != ret && !mDeviceConfigMismatch)
   {
     return -1;
   }
-
   mIsFileParsed = true;
   printParserState();
   return 0;

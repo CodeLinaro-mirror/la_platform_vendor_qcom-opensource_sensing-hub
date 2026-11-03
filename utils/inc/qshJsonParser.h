@@ -3,11 +3,9 @@
  * SPDX-License-Identifier: BSD-3-Clause-Clear
  */
 #pragma once
-
 #include <unordered_map>
 #include <vector>
 #include <string>
-
 struct comm_config
 {
   int comm_type;          // COMM_TYPE_QMI / COMM_TYPE_GLINK / COMM_TYPE_FASTRPC; -1 if not set
@@ -15,22 +13,18 @@ struct comm_config
   int no_of_channels;        // number of GLINK channels; 0 if unused
   int service_id;            // QMI service id; 0 if unused
   std::string link_name;     // transport link (e.g. "lmcu"/"adsp"); empty if unused
-
   comm_config() : comm_type(-1), no_of_channels(0), service_id(0) {}
 };
-
 class qshJsonParser
 {
 public:
   qshJsonParser();
   ~qshJsonParser(){};
-
   static qshJsonParser& getInstance()
   {
       static qshJsonParser parserInstance;
       return parserInstance;
   }
-
   /* reads sensing_hub_config file & starts parsing */
   int loadFile(const char* path);
   /* returns list of supported hub ids */
@@ -46,7 +40,6 @@ public:
   /* fetches the direct channel configuration for a hub id */
   comm_config getDrcConfig(int hubID);
   void printParserState();
-
 private:
   /* field name -> device's actual value, read once at construction */
   std::unordered_map<std::string, int> mDeviceConfigs;
@@ -58,32 +51,21 @@ private:
   int readSocId();
   int readSoftSkuId();
   void resetParserState();
-
   std::unordered_map<std::string, int> mSensingHubNameIdMap;
   std::unordered_map<int, std::string> mSensingHubIdNameMap;
   std::unordered_map<int, comm_config> mSensingHubClientCommMap;
   std::unordered_map<int, comm_config> mSensingHubDrcMap;
-
   int mCurrLineNum;
   std::vector<int> mHubIds;
-
   bool mReadCommAttr;
   bool mIsDrcConfigGrp;
   bool mIsClientCommGrp;
   bool mIsAppsLink;
-
   int mSensingHubId;
   std::string mPlatformId;
-
   comm_config mClientCommConfig;
   comm_config mDrcConfig;
-
   bool mIsFileParsed;
-  /* set by parseFile() when the file is valid JSON but its soc_id/sku_id
-   * gating doesn't match this device -- lets loadFile() tell that case
-   * apart from a real parse error. */
-  bool mDeviceConfigMismatch;
-
   int getWhitespaceLen(char const* str, uint32_t strLen);
   uint32_t parsePair(char* json, uint32_t jsonLen, char** key, char** value);
   uint32_t parseItem(char* itemName, char* itemValue, char* json, uint32_t jsonLen);
